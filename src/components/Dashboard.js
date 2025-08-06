@@ -1,27 +1,66 @@
 // src/components/Dashboard.js
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Axios'u dahil ediyoruz
+import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService'; // IndexedDB servisinden çekme
+import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // DOĞRU API ADRESİ İLE GÜNCELLENDİ
-                const response = await fetch('https://kalite-kontrol-api.onrender.com/api/dashboard');
-                if (!response.ok) {
-                    throw new Error('Dashboard verileri çekilemedi.');
-                }
-                const data = await response.json();
-                setDashboardData(data.ozet);
-                setDenetimler(data.data);
+                // Önce uzaktaki sunucudan verileri çekmeyi dene
+                const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/dashboard');
+                setDashboardData(response.data.ozet);
+                setDenetimler(response.data.data);
+                setLoading(false);
             } catch (err) {
-                setError(err.message);
-            } finally {
+                console.error("Dashboard verileri sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
+                // Sunucudan veri çekilemezse, IndexedDB'den çekmeyi dene
+                try {
+                    const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
+                    // IndexedDB'den gelen veriyi dashboard formatına dönüştürme
+                    const ozet = {
+                        toplamDenetim: indexedDBDenetimler.length,
+                        hataSayilari: {},
+                        hataFotograflari: []
+                    };
+
+                    indexedDBDenetimler.forEach(denetim => {
+                        denetim.formData.forEach(madde => {
+                            if (madde.durum === 'Uygun Değil') {
+                                if (ozet.hataSayilari[madde.metin]) {
+                                    ozet.hataSayilari[madde.metin]++;
+                                } else {
+                                    ozet.hataSayilari[madde.metin] = 1;
+                                }
+                                if (madde.foto) {
+                                    ozet.hataFotograflari.push({
+                                        madde: madde.metin,
+                                        not: madde.not,
+                                        foto: madde.foto,
+                                        tarih: denetim.tarih
+                                    });
+                                }
+                            }
+                        });
+                    });
+
+                    setDashboardData(ozet);
+                    setDenetimler(indexedDBDenetimler);
+                    setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
+                    setShowModal(true);
+                } catch (indexedDBError) {
+                    console.error("IndexedDB'den dashboard verileri getirilirken hata oluştu:", indexedDBError);
+                    setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
+                }
                 setLoading(false);
             }
         };
@@ -32,6 +71,10 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim }) => {
     const handleDenetimClick = (denetim) => {
         setSelectedDenetim(denetim);
         setCurrentView('denetimDetayi');
+    };
+
+    const closeModalAndNavigate = () => {
+        setShowModal(false);
     };
 
     if (loading) return <div>Veriler yükleniyor...</div>;
@@ -49,7 +92,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim }) => {
             {hatalıDenetimler.length > 0 ? (
                 <ol>
                     {hatalıDenetimler.map((denetim, index) => (
-                        <li key={denetim._id} onClick={() => handleDenetimClick(denetim)}>
+                        <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
                             ({index + 1}) Tarih: {new Date(denetim.tarih).toLocaleString()}
                         </li>
                     ))}
@@ -61,6 +104,9 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim }) => {
             <div className="form-action-buttons">
                 <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
             </div>
+            {showModal && (
+                <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
+            )}
         </div>
     );
 };
