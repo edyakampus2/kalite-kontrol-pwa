@@ -1,12 +1,15 @@
 // src/components/DenetimFormu.js
 
 import React, { useState, useEffect } from 'react';
-import { saveDenetim } from '../services/IndexedDBService';
+import { saveDenetim } from '../services/IndexedDBService'; // IndexedDB servisi
 import { getFormMaddeleri } from '../data/FormVerileri';
+import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
 
 const DenetimFormu = ({ setCurrentView }) => {
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
         // Form verilerini statik bir dosyadan yükle
@@ -82,37 +85,50 @@ const DenetimFormu = ({ setCurrentView }) => {
         reader.readAsDataURL(file);
     };
 
-   // src/components/DenetimFormu.js (handleSubmit fonksiyonu)
+    const handleSubmit = async () => {
+        const denetim = {
+            tarih: new Date().toISOString(),
+            konum: konum,
+            formData: formData
+        };
 
-const handleSubmit = async () => {
-    const denetim = {
-        tarih: new Date().toISOString(),
-        konum: konum,
-        formData: formData
+        try {
+            const response = await fetch('https://kalite-kontrol-api.onrender.com/api/denetimler', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(denetim),
+            });
+
+            if (response.ok) {
+                setModalMessage('Denetim başarıyla sunucuya gönderildi!');
+                setShowModal(true);
+                // Sunucuya başarıyla gönderildiyse, yerel IndexedDB'ye de kaydet
+                // Bu, çevrimdışı görüntüleme için bir kopyasını tutar
+                await saveDenetim(denetim); 
+            } else {
+                // Sunucuya gönderilemediyse (ancak internet bağlıysa), hata mesajı göster
+                const errorData = await response.json();
+                setModalMessage(`Sunucuya veri gönderilirken bir hata oluştu: ${errorData.message || response.statusText}`);
+                setShowModal(true);
+                // Hata durumunda bile yerel IndexedDB'ye kaydet
+                await saveDenetim(denetim);
+            }
+        } catch (error) {
+            // Bağlantı hatası (internet yok veya sunucuya ulaşılamıyor)
+            setModalMessage('Bağlantı hatası: Sunucuya ulaşılamıyor. Veri yerel olarak kaydediliyor.');
+            setShowModal(true);
+            await saveDenetim(denetim); // Veriyi yerel IndexedDB'ye kaydet
+        } finally {
+            // Modal kapatıldıktan sonra view değişecek
+        }
     };
 
-    try {
-        const response = await fetch('https://kalite-kontrol-api.onrender.com/api/denetimler', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(denetim),
-        });
-
-        if (response.ok) {
-            alert('Denetim başarıyla sunucuya gönderildi!');
-            setCurrentView('menu');
-        } else {
-            alert('Sunucuya veri gönderilirken bir hata oluştu.');
-        }
-    } catch (error) {
-        alert('Bağlantı hatası: Sunucuya ulaşılamıyor. Veri yerel olarak kaydediliyor.');
-        // Bağlantı hatası durumunda veriyi yine de IndexedDB'ye kaydediyoruz.
-        await saveDenetim(denetim);
+    const closeModalAndNavigate = () => {
+        setShowModal(false);
         setCurrentView('menu');
-    }
-};
+    };
 
     return (
         <div className="denetim-formu">
@@ -146,6 +162,10 @@ const handleSubmit = async () => {
             ))}
             <button onClick={handleSubmit}>Taslak Kaydet</button>
             <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
+
+            {showModal && (
+                <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
+            )}
         </div>
     );
 };
