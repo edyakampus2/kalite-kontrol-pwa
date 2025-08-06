@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-const Dashboard = ({ setCurrentView, setSelectedDenetim }) => { // Yeni prop eklendi
+const Dashboard = ({ setCurrentView, setSelectedDenetim }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,13 +11,14 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim }) => { // Yeni prop ekl
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/dashboard');
+                // DOĞRU API ADRESİ İLE GÜNCELLENDİ
+                const response = await fetch('https://kalite-kontrol-api.onrender.com/api/dashboard');
                 if (!response.ok) {
                     throw new Error('Dashboard verileri çekilemedi.');
                 }
                 const data = await response.json();
                 setDashboardData(data.ozet);
-                setDenetimler(data.data); // Tüm denetim verisini de kaydet
+                setDenetimler(data.data);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -30,7 +31,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim }) => { // Yeni prop ekl
 
     const handleDenetimClick = (denetim) => {
         setSelectedDenetim(denetim);
-        setCurrentView('denetimDetayi'); // Yeni bir görünüme geçiş
+        setCurrentView('denetimDetayi');
     };
 
     if (loading) return <div>Veriler yükleniyor...</div>;
