@@ -1,18 +1,37 @@
 // src/components/DenetimListesi.js
 
 import React, { useState, useEffect } from 'react';
-import { getDenetimler } from '../services/IndexedDBService';
+import axios from 'axios'; // Axios'u dahil ediyoruz
 
 const DenetimListesi = ({ setCurrentView }) => {
     const [denetimler, setDenetimler] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchDenetimler = async () => {
-            const kaydedilenDenetimler = await getDenetimler();
-            setDenetimler(kaydedilenDenetimler);
+            try {
+                // Backend'den verileri çeken GET isteği
+                const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
+                setDenetimler(response.data.data); // Backend'in gönderdiği veriyi state'e kaydediyoruz
+                setLoading(false);
+            } catch (err) {
+                console.error("Denetimler getirilirken hata oluştu:", err);
+                setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
+                setLoading(false);
+            }
         };
+
         fetchDenetimler();
     }, []);
+
+    if (loading) {
+        return <div className="denetim-listesi">Veriler yükleniyor...</div>;
+    }
+
+    if (error) {
+        return <div className="denetim-listesi">{error}</div>;
+    }
 
     return (
         <div className="denetim-listesi">
@@ -20,10 +39,10 @@ const DenetimListesi = ({ setCurrentView }) => {
             {denetimler.length > 0 ? (
                 <ul>
                     {denetimler.map(denetim => (
-                        <li key={denetim.id}>
+                        <li key={denetim._id}>
                             <p>Tarih: {new Date(denetim.tarih).toLocaleString()}</p>
                             <p>Konum: Lat: {denetim.konum.latitude}, Lon: {denetim.konum.longitude}</p>
-                            {/* İsteğe bağlı olarak daha fazla detay gösterebiliriz */}
+                            {/* Diğer denetim detayları buraya eklenebilir */}
                         </li>
                     ))}
                 </ul>
