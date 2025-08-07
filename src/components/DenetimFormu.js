@@ -1,142 +1,128 @@
 // src/components/DenetimFormu.js
 
-import React, { useState } from 'react';
-import { saveDenetim } from '../services/IndexedDBService'; // Düzeltilmiş import
-import axios from 'axios';
-import MessageModal from './MessageModal';
+import React, { useState, useEffect } from 'react';
+import { saveDenetim } from '../services/IndexedDBService';
+import { getFormMaddeleri } from '../data/FormVerileri';
 
-// Denetim form bileşeni
-const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
-    const [formData, setFormData] = useState([
-        { metin: 'Öğe 1', durum: 'Uygun', not: '', foto: '' },
-        { metin: 'Öğe 2', durum: 'Uygun', not: '', foto: '' },
-        { metin: 'Öğe 3', durum: 'Uygun', not: '', foto: '' },
-        // ... Diğer form maddeleri
-    ]);
-    const [loading, setLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
+const DenetimFormu = ({ setCurrentView }) => {
+    const [formData, setFormData] = useState([]);
+    const [konum, setKonum] = useState(null);
 
-    const handleInputChange = (index, field, value) => {
-        const newFormData = [...formData];
-        newFormData[index][field] = value;
-        setFormData(newFormData);
+    useEffect(() => {
+        const maddeler = getFormMaddeleri();
+        setFormData(maddeler);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setKonum({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    console.error("Konum bilgisi alınamadı:", error);
+                }
+            );
+        }
+    }, []);
+
+    const handleDurumChange = (maddeId, durum) => {
+        setFormData(prevData =>
+            prevData.map(madde =>
+                madde.id === maddeId ? { ...madde, durum } : madde
+            )
+        );
     };
 
-    const handleFotoChange = (index, e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                handleInputChange(index, 'foto', reader.result);
+    const handleNotChange = (maddeId, not) => {
+        setFormData(prevData =>
+            prevData.map(madde =>
+                madde.id === maddeId ? { ...madde, not } : madde
+            )
+        );
+    };
+
+    const handleFotoChange = async (maddeId, file) => {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const img = new Image();
+            img.src = reader.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height = height * (MAX_WIDTH / width);
+                    width = MAX_WIDTH;
+                }
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const optimizedImage = canvas.toDataURL('image/jpeg', 0.7);
+
+                setFormData(prevData =>
+                    prevData.map(madde =>
+                        madde.id === maddeId ? { ...madde, foto: optimizedImage } : madde
+                    )
+                );
             };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        const denetimData = {
-            tarih: new Date().toISOString(),
-            formData: formData,
         };
-
-        try {
-            if (navigator.onLine) {
-                // Online ise, sadece sunucuya yükle
-                await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetimData);
-                setModalMessage('Denetim başarıyla sunucuya kaydedildi.');
-            } else {
-                // Offline ise, sadece IndexedDB'ye kaydet
-                await saveDenetim(denetimData); // Fonksiyon adını düzelttik
-                setModalMessage('İnternet bağlantısı yok. Denetim yerel olarak kaydedildi, bağlantı kurulduğunda senkronize edilecek.');
-            }
-            
-            setShowModal(true);
-            setLoading(false);
-        } catch (error) {
-            console.error('Denetim kaydedilirken hata oluştu:', error);
-            setModalMessage('Denetim kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
-            setShowModal(true);
-            setLoading(false);
-        }
+        reader.readAsDataURL(file);
     };
 
-    const closeModalAndNavigate = () => {
-        setShowModal(false);
-        setRefreshTrigger(prev => !prev); // Yeni denetim kaydedildiğinde listeyi yenilemek için tetikleyici
-        setCurrentView('list');
+    const handleSubmit = async () => {
+        const denetim = {
+            tarih: new Date().toISOString(),
+            konum: konum,
+            formData: formData
+        };
+        await saveDenetim(denetim);
+        alert('Denetim başarıyla kaydedildi!');
+        setCurrentView('menu'); // Ana menüye dön
     };
 
     return (
-        <div className="denetim-formu-container p-6 bg-gray-100 min-h-screen">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">Yeni Denetim Formu</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {formData.map((madde, index) => (
-                    <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="font-semibold text-lg mb-2">{madde.metin}</h3>
-                        <div className="flex items-center space-x-4 mb-2">
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    name={`durum-${index}`}
-                                    value="Uygun"
-                                    checked={madde.durum === 'Uygun'}
-                                    onChange={() => handleInputChange(index, 'durum', 'Uygun')}
-                                />
-                                <span>Uygun</span>
-                            </label>
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    name={`durum-${index}`}
-                                    value="Uygun Değil"
-                                    checked={madde.durum === 'Uygun Değil'}
-                                    onChange={() => handleInputChange(index, 'durum', 'Uygun Değil')}
-                                />
-                                <span>Uygun Değil</span>
-                            </label>
-                        </div>
-                        {madde.durum === 'Uygun Değil' && (
-                            <>
-                                <textarea
-                                    className="w-full p-2 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Not ekle..."
-                                    value={madde.not}
-                                    onChange={(e) => handleInputChange(index, 'not', e.target.value)}
-                                />
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="camera"
-                                    className="w-full mt-2"
-                                    onChange={(e) => handleFotoChange(index, e)}
-                                />
-                                {madde.foto && (
-                                    <img src={madde.foto} alt="Denetim Fotoğrafı" className="mt-2 max-w-full h-auto rounded-lg shadow-md" />
-                                )}
-                            </>
-                        )}
+        <div className="denetim-formu">
+            <h2>Kaba İnşaat Kontrol Formu</h2>
+            <p>Konum: {konum ? `Lat: ${konum.latitude}, Lon: ${konum.longitude}` : 'Konum alınıyor...'}</p>
+            {formData.map(madde => (
+                <div key={madde.id} className="kontrol-maddesi">
+                    <h4>{madde.metin}</h4>
+                    <div className="durum-secenekleri">
+                        <button onClick={() => handleDurumChange(madde.id, 'Uygun')}>Uygun</button>
+                        <button onClick={() => handleDurumChange(madde.id, 'Uygun Değil')}>Uygun Değil</button>
                     </div>
-                ))}
-                <div className="form-action-buttons">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:opacity-50"
-                    >
-                        {loading ? 'Kaydediliyor...' : 'Denetimi Kaydet'}
-                    </button>
+                    {madde.durum === 'Uygun Değil' && (
+                        <div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={e => handleFotoChange(madde.id, e.target.files[0])}
+                            />
+                            <textarea
+                                placeholder="Not ekle..."
+                                onChange={e => handleNotChange(madde.id, e.target.value)}
+                            ></textarea>
+                            {madde.foto && (
+                                <img src={madde.foto} alt="Kanıt" style={{ maxWidth: '100px', maxHeight: '100px' }} />
+                            )}
+                        </div>
+                    )}
                 </div>
-            </form>
-            <div className="form-action-buttons mt-4">
-                <button onClick={() => setCurrentView('menu')} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300">
-                    Ana Menüye Dön
-                </button>
+            ))}
+            <div className="form-action-buttons">
+                <button onClick={handleSubmit}>Taslak Kaydet</button>
+                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
             </div>
-            {showModal && <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />}
         </div>
     );
 };
