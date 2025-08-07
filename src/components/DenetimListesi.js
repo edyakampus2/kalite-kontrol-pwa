@@ -5,7 +5,7 @@ import axios from 'axios';
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService'; // IndexedDB servisinden çekme
 import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
 
-const DenetimListesi = ({ setCurrentView }) => {
+const DenetimListesi = ({ setCurrentView, refreshTrigger }) => { // refreshTrigger prop'u eklendi
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -15,6 +15,7 @@ const DenetimListesi = ({ setCurrentView }) => {
 
     useEffect(() => {
         const fetchDenetimler = async () => {
+            setLoading(true); // Veri çekme başladığında yükleniyor durumunu ayarla
             try {
                 // Önce uzaktaki sunucudan verileri çekmeyi dene
                 const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
@@ -37,7 +38,7 @@ const DenetimListesi = ({ setCurrentView }) => {
         };
 
         fetchDenetimler();
-    }, []);
+    }, [refreshTrigger]); // refreshTrigger değiştiğinde verileri yeniden çek
 
     const closeModalAndNavigate = () => {
         setShowModal(false);
