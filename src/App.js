@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
-import Menu from './components/Menu'; // Menu bileşenini tekrar dahil ettik
+import Menu from './components/Menu';
 import DenetimFormu from './components/DenetimFormu';
 import DenetimListesi from './components/DenetimListesi';
 import Dashboard from './components/Dashboard';

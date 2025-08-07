@@ -1,27 +1,27 @@
 import React from 'react';
 
-// Ana menü bileşeni
+// Ana menü bileşeni, Tailwind CSS ile stillendirildi
 const Menu = ({ setCurrentView }) => {
     return (
-        <div className="menu-container p-6 bg-gray-100 min-h-screen flex flex-col items-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Kalite Kontrol PWA</h1>
-            <h2 className="text-2xl font-semibold text-gray-700 mb-10">Ana Menü</h2>
-            <div className="flex flex-col space-y-4">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6">
+            <h1 className="text-5xl font-extrabold tracking-tight mb-4 text-center">Kalite Kontrol PWA</h1>
+            <h2 className="text-2xl font-bold mb-10 text-gray-300">Ana Menü</h2>
+            <div className="flex flex-col space-y-6 w-full max-w-sm">
                 <button
                     onClick={() => setCurrentView('form')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-105"
                 >
                     Yeni Denetim Başlat
                 </button>
                 <button
                     onClick={() => setCurrentView('list')}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-105"
                 >
                     Denetimlerim
                 </button>
                 <button
                     onClick={() => setCurrentView('dashboard')}
-                    className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-105"
                 >
                     Dashboard
                 </button>
