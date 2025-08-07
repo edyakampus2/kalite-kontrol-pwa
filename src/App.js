@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
-// import Menu from './components/Menu'; // Bu satırı kaldırdık
+import Menu from './components/Menu'; // Menu bileşenini tekrar dahil ettik
 import DenetimFormu from './components/DenetimFormu';
 import DenetimListesi from './components/DenetimListesi';
 import Dashboard from './components/Dashboard';
@@ -12,7 +12,7 @@ import MessageModal from './components/MessageModal';
 import { getDenetimler as getDenetimlerFromIndexedDB, clearDenetimler as clearDenetimlerInIndexedDB } from './services/IndexedDBService';
 
 const App = () => {
-    const [currentView, setCurrentView] = useState('dashboard'); // Başlangıç sayfasını dashboard olarak değiştirdik
+    const [currentView, setCurrentView] = useState('menu'); // Başlangıç sayfasını menü olarak değiştirdik
     const [selectedDenetim, setSelectedDenetim] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
@@ -71,8 +71,8 @@ const App = () => {
 
     const renderView = () => {
         switch (currentView) {
-            // case 'menu': // Menu case'ini kaldırdık
-            //     return <Menu setCurrentView={setCurrentView} />;
+            case 'menu':
+                return <Menu setCurrentView={setCurrentView} />;
             case 'form':
                 return <DenetimFormu setCurrentView={setCurrentView} setRefreshTrigger={setRefreshTrigger} />;
             case 'list':
@@ -82,8 +82,7 @@ const App = () => {
             case 'denetimDetayi':
                 return <DenetimDetayi setCurrentView={setCurrentView} selectedDenetim={selectedDenetim} />;
             default:
-                // Default olarak dashboard'u göster
-                return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
+                return <Menu setCurrentView={setCurrentView} />;
         }
     };
 
