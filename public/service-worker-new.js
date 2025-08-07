@@ -1,23 +1,11 @@
 // public/service-worker-new.js
 
-const CACHE_NAME = 'kalite-kontrol-cache-final-v4'; // Yeni versiyon için önbellek adını güncelledik
+const CACHE_NAME = 'kalite-kontrol-cache-final-v5'; // Yeni versiyon için önbellek adını güncelledik
 
 self.addEventListener('install', event => {
-  console.log('Service Worker kuruluyor... Final sürüm 4.');
+  console.log('Service Worker kuruluyor... Final sürüm 5.');
   // Yeni service worker'ı hemen etkinleştir
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      // Uygulamanın en temel statik dosyalarını önbelleğe al
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/manifest.json',
-        // Buraya PWA'nın ana dosyalarını ekleyin
-        // Örnek: logo, ikonlar, vb.
-      ]);
-    })
-  );
 });
 
 self.addEventListener('fetch', event => {
@@ -26,10 +14,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Dinamik olarak önbellekleme
+  // Önbellekten yanıt almayı dene
   event.respondWith(
     caches.match(event.request).then(response => {
-      // Önbellekte varsa doğrudan döndür
+      // Önbellekte varsa döndür
       if (response) {
         return response;
       }
@@ -43,29 +31,37 @@ self.addEventListener('fetch', event => {
           return response;
         }
 
-        // Yanıtı klonla, çünkü yanıt akışları yalnızca bir kez okunabilir
         const responseToCache = response.clone();
-
+        
+        // Yanıtı klonla ve önbelleğe al
         caches.open(CACHE_NAME).then(cache => {
-          // CSS ve JS dosyalarını dinamik olarak önbelleğe al
+          // CSS, JS ve diğer gerekli dosyaları dinamik olarak önbelleğe al
           const url = new URL(event.request.url);
-          const isCss = url.pathname.endsWith('.css');
-          const isJs = url.pathname.endsWith('.js');
+          const fileExtension = url.pathname.split('.').pop();
           
-          // `static` klasöründeki tüm CSS ve JS dosyalarını önbelleğe al
-          if (url.pathname.startsWith('/static/') && (isCss || isJs)) {
+          // `static` klasöründeki CSS ve JS dosyaları ve ana HTML dosyalarını önbelleğe al
+          if (
+            url.pathname.startsWith('/static/') || 
+            url.pathname === '/' || 
+            url.pathname === '/index.html' || 
+            url.pathname === '/manifest.json'
+          ) {
             cache.put(event.request, responseToCache);
           }
         });
 
         return response;
       });
+    }).catch(error => {
+      console.error('Fetch hatası:', error);
+      // Ağ hatasında önbellekten dosya döndürmeyi dene
+      return caches.match('/');
     })
   );
 });
 
 self.addEventListener('activate', event => {
-  console.log('Service Worker etkinleştiriliyor... Final sürüm 4.');
+  console.log('Service Worker etkinleştiriliyor... Final sürüm 5.');
   // Eski client'ların yeni service worker'ı kullanmasını sağla
   event.waitUntil(self.clients.claim());
 
