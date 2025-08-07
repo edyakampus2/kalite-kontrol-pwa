@@ -1,29 +1,10 @@
 // public/service-worker-new.js
 
-const CACHE_NAME = 'kalite-kontrol-cache-final';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  // Tailwind CSS için gerekli olan dosya. Proje build edildiğinde doğru yolu bulacaktır.
-  '/static/css/main.css', 
-  // Ana JS dosyaları. Build edildiğinde isimleri değişebilir.
-  // Bu nedenle wildcards (joker karakter) kullanmak daha güvenli olabilir.
-  '/static/js/*.js', 
-  '/static/js/*.chunk.js',
-];
+const CACHE_NAME = 'kalite-kontrol-cache-final-v2'; // Yeni versiyon için önbellek adını güncelledik
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Önbelleğe alma işlemi tamamlandı. Final sürüm.');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(error => {
-        console.error('Önbelleğe alma işleminde hata oluştu:', error);
-      })
-  );
+  console.log('Service Worker kuruluyor... Final sürüm 2.');
+  // Service Worker yüklendiğinde yapılması gerekenler buraya gelir.
 });
 
 self.addEventListener('fetch', event => {
@@ -31,29 +12,41 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') {
     return;
   }
-  
+
+  // Dinamik olarak önbellekleme
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          // Önbellekte varsa doğrudan önbellekten döndür
+    caches.match(event.request).then(response => {
+      // Önbellekte varsa doğrudan döndür
+      if (response) {
+        return response;
+      }
+
+      // Önbellekte yoksa ağdan çek
+      const fetchRequest = event.request.clone();
+
+      return fetch(fetchRequest).then(response => {
+        // Geçerli bir yanıt gelmezse veya ağ hatası olursa geri dön
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        
-        // Önbellekte yoksa ağdan çek
-        return fetch(event.request)
-          .then(res => {
-            // Ağdan çekilen dosyaları önbelleğe ekle
-            return caches.open(CACHE_NAME)
-              .then(cache => {
-                // Sadece başarılı yanıtları önbelleğe al
-                if (res.status === 200) {
-                  cache.put(event.request, res.clone());
-                }
-                return res;
-              });
-          });
-      })
+
+        // Yanıtı klonla, çünkü yanıt akışları yalnızca bir kez okunabilir
+        const responseToCache = response.clone();
+
+        caches.open(CACHE_NAME).then(cache => {
+          // CSS ve JS dosyalarını dinamik olarak önbelleğe al
+          const url = new URL(event.request.url);
+          const isCss = url.pathname.endsWith('.css');
+          const isJs = url.pathname.endsWith('.js');
+          
+          if (isCss || isJs) {
+            cache.put(event.request, responseToCache);
+          }
+        });
+
+        return response;
+      });
+    })
   );
 });
 
