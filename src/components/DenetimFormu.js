@@ -1,7 +1,7 @@
 // src/components/DenetimFormu.js
 
 import React, { useState } from 'react';
-import { addDenetim } from '../services/IndexedDBService'; // Düzeltilmiş import
+import { saveDenetim } from '../services/IndexedDBService'; // Düzeltilmiş import
 import axios from 'axios';
 import MessageModal from './MessageModal';
 
@@ -50,7 +50,7 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
                 setModalMessage('Denetim başarıyla sunucuya kaydedildi.');
             } else {
                 // Offline ise, sadece IndexedDB'ye kaydet
-                await addDenetim(denetimData); // Fonksiyon adını düzeltiyoruz
+                await saveDenetim(denetimData); // Fonksiyon adını düzelttik
                 setModalMessage('İnternet bağlantısı yok. Denetim yerel olarak kaydedildi, bağlantı kurulduğunda senkronize edilecek.');
             }
             
