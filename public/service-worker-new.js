@@ -1,10 +1,21 @@
 // public/service-worker-new.js
 
-const CACHE_NAME = 'kalite-kontrol-cache-final-v2'; // Yeni versiyon için önbellek adını güncelledik
+const CACHE_NAME = 'kalite-kontrol-cache-final-v3'; // Yeni versiyon için önbellek adını güncelledik
 
 self.addEventListener('install', event => {
-  console.log('Service Worker kuruluyor... Final sürüm 2.');
-  // Service Worker yüklendiğinde yapılması gerekenler buraya gelir.
+  console.log('Service Worker kuruluyor... Final sürüm 3.');
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      // Uygulamanın en temel statik dosyalarını önbelleğe al
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.json',
+        // Buraya PWA'nın ana dosyalarını ekleyin
+        // Örnek: logo, ikonlar, vb.
+      ]);
+    })
+  );
 });
 
 self.addEventListener('fetch', event => {
@@ -39,7 +50,8 @@ self.addEventListener('fetch', event => {
           const isCss = url.pathname.endsWith('.css');
           const isJs = url.pathname.endsWith('.js');
           
-          if (isCss || isJs) {
+          // `static` klasöründeki tüm CSS ve JS dosyalarını önbelleğe al
+          if (url.pathname.startsWith('/static/') && (isCss || isJs)) {
             cache.put(event.request, responseToCache);
           }
         });
