@@ -5,7 +5,7 @@ import { saveDenetim } from '../services/IndexedDBService'; // IndexedDB servisi
 import { getFormMaddeleri } from '../data/FormVerileri';
 import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
 
-const DenetimFormu = ({ setCurrentView }) => {
+const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -104,24 +104,22 @@ const DenetimFormu = ({ setCurrentView }) => {
             if (response.ok) {
                 setModalMessage('Denetim başarıyla sunucuya gönderildi!');
                 setShowModal(true);
-                // Sunucuya başarıyla gönderildiyse, yerel IndexedDB'ye de kaydet
-                // Bu, çevrimdışı görüntüleme için bir kopyasını tutar
-                await saveDenetim(denetim); 
+                await saveDenetim(denetim);
             } else {
-                // Sunucuya gönderilemediyse (ancak internet bağlıysa), hata mesajı göster
                 const errorData = await response.json();
                 setModalMessage(`Sunucuya veri gönderilirken bir hata oluştu: ${errorData.message || response.statusText}`);
                 setShowModal(true);
-                // Hata durumunda bile yerel IndexedDB'ye kaydet
                 await saveDenetim(denetim);
             }
         } catch (error) {
-            // Bağlantı hatası (internet yok veya sunucuya ulaşılamıyor)
             setModalMessage('Bağlantı hatası: Sunucuya ulaşılamıyor. Veri yerel olarak kaydediliyor.');
             setShowModal(true);
-            await saveDenetim(denetim); // Veriyi yerel IndexedDB'ye kaydet
+            await saveDenetim(denetim);
         } finally {
-            // Modal kapatıldıktan sonra view değişecek
+            // Kaydetme işlemi bittiğinde veri yenileme tetikleyicisini çalıştır
+            if(setRefreshTrigger) {
+                setRefreshTrigger(prev => !prev);
+            }
         }
     };
 
