@@ -1,6 +1,6 @@
 // public/service-worker.js
 
-const CACHE_NAME = 'kalite-kontrol-cache-v2'; // Önbellek adını güncelledik
+const CACHE_NAME = 'kalite-kontrol-cache-v3'; // Önbellek adını güncelledik
 const urlsToCache = [
   '/',
   '/index.html',
