@@ -1,17 +1,19 @@
+// src/index.js
+
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration'; // PWA için eklenen satır
-import reportWebVitals from './reportWebVitals';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById('root')
 );
 
-serviceWorkerRegistration.register(); // PWA için eklenen satır
-
-reportWebVitals();
+// PWA'nın çevrimdışı işlevselliğini sağlamak için Service Worker'ı kaydedin.
+// Daha hızlı yükleme ve çevrimdışı deneyim için Service Worker'ın kaydını silebilir
+// veya değiştirebilirsiniz. Daha fazla bilgi için: https://cra.link/PWA
+serviceWorkerRegistration.register();
