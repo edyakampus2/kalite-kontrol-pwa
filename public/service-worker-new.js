@@ -1,9 +1,11 @@
 // public/service-worker-new.js
 
-const CACHE_NAME = 'kalite-kontrol-cache-final-v3'; // Yeni versiyon için önbellek adını güncelledik
+const CACHE_NAME = 'kalite-kontrol-cache-final-v4'; // Yeni versiyon için önbellek adını güncelledik
 
 self.addEventListener('install', event => {
-  console.log('Service Worker kuruluyor... Final sürüm 3.');
+  console.log('Service Worker kuruluyor... Final sürüm 4.');
+  // Yeni service worker'ı hemen etkinleştir
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       // Uygulamanın en temel statik dosyalarını önbelleğe al
@@ -63,6 +65,10 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('activate', event => {
+  console.log('Service Worker etkinleştiriliyor... Final sürüm 4.');
+  // Eski client'ların yeni service worker'ı kullanmasını sağla
+  event.waitUntil(self.clients.claim());
+
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
