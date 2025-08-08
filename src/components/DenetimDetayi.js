@@ -2,7 +2,7 @@
 // src/components/DenetimDetayi.js
 
 import React from 'react';
-import MessageModal from './MessageModal';
+// Hata veren MessageModal import satırı kaldırıldı.
 
 const DenetimDetayi = ({ setCurrentView, selectedDenetim }) => {
     if (!selectedDenetim) {
