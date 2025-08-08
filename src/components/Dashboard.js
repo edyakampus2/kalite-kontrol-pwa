@@ -1,6 +1,5 @@
 // Tarih: 08.08.2025
 // src/components/Dashboard.js
-// Bu kod, "Uncaught TypeError: l.filter is not a function" hatasını giderir.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -23,11 +22,11 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
             if (navigator.onLine) {
                 try {
                     const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
-                    // Gelen verinin bir dizi olduğundan emin olmak için kontrol ekliyoruz
-                    if (Array.isArray(response.data)) {
-                        allDenetimler = response.data;
+                    // API'den gelen veriyi doğru şekilde (response.data.data) alıyoruz
+                    if (response.data && Array.isArray(response.data.data)) {
+                        allDenetimler = response.data.data;
                     } else {
-                        console.error('API’den gelen veri bir dizi değil:', response.data);
+                        console.error('API’den gelen veri beklenildiği gibi değil:', response.data);
                         throw new Error('API verisi beklenildiği gibi değil.');
                     }
                     console.log('Veriler sunucudan çekildi.');
@@ -50,15 +49,13 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
                     console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
                 }
             }
-            
-            // Eğer veri bir dizi ise state'i güncelliyoruz
+
             if (Array.isArray(allDenetimler)) {
                 setDenetimler(allDenetimler);
             } else {
-                // Değilse, hatayı önlemek için boş bir dizi atıyoruz
                 setDenetimler([]);
             }
-            
+
             setLoading(false);
             if(modalMessage) setShowModal(true);
         };
@@ -78,9 +75,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     if (loading) return <div>Veriler yükleniyor...</div>;
     if (error) return <div>Hata: {error}</div>;
 
-    // hatalıDenetimler'i filtrelerken denetimler dizisinin varlığından emin oluyoruz.
-    // Bu, hata durumunda boş bir dizi kullanılarak TypeError'ı önler.
-    const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi && d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
+    const hatalıDenetimler = denetimler.filter(d => d.formData && d.formData.some(m => m.durum === 'Uygun Değil'));
 
     return (
         <div className="dashboard-container">
