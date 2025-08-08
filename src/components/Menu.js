@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 12:30
+// Tarih: 08.08.2025 Saat: 13:20
 // src/components/Menu.js
 
 import React from 'react';
@@ -10,6 +10,7 @@ const Menu = ({ setCurrentView }) => {
       <button onClick={() => setCurrentView('form')}>Yeni Denetim Başlat</button>
       <button onClick={() => setCurrentView('list')}>Denetimlerim</button>
       <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
+      <button onClick={() => setCurrentView('yedekleme')}>Yedekleme ve Geri Yükleme</button>
     </div>
   );
 };
