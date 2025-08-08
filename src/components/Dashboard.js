@@ -1,6 +1,6 @@
 // Dosya: src/components/Dashboard.js
 // Tarih: 08.08.2025
-// Saat: 18:00
+// Saat: 18:05
 // Bu dosya, ana bileşen tarafından çağrılan bir "Dashboard" bileşenidir.
 
 // Gerekli React kancalarını ve kütüphanelerini içe aktarıyoruz
@@ -137,7 +137,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Toplam Denetim Kartı */}
                     <div className={cardStyle}>
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Toplam Denetim</h3>
+                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Toplam Denetim Sayısı</h3>
                         <p className={valueStyle}>{dashboardData.totalDenetimler}</p>
                     </div>
 
