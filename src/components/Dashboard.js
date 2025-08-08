@@ -1,21 +1,23 @@
 // src/components/Dashboard.js
-// Tarih: 08.08.2025 Saat: 15:05
+// Tarih: 08.08.2025 Saat: 15:45
 // Açıklama: Denetim verilerinden özet istatistikler ve hatalı denetimlerin listesini gösterir.
-// Mesaj ve modal yönetimi için App.js'ten gelen 'showMessage' fonksiyonunu kullanır.
+// Veri çekme, hesaplama ve state yönetimini daha optimize hale getirilmiştir.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMessage }) => {
+    // Dashboard için özet istatistikleri tutan state
     const [dashboardData, setDashboardData] = useState(null);
-    const [denetimler, setDenetimler] = useState([]);
+    // Hatalı denetimleri tutan state
+    const [hataliDenetimler, setHataliDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // API'den veya IndexedDB'den denetim verilerini çeken fonksiyon
-        const fetchDashboardData = async () => {
+        // API'den veya IndexedDB'den denetim verilerini çeken ana fonksiyon
+        const fetchAndProcessData = async () => {
             setLoading(true);
             setError(null);
             let allDenetimler = [];
@@ -45,37 +47,41 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
                     let nonCompliantCount = 0;
                     let totalKontrolItems = 0;
                     
-                    allDenetimler.forEach(denetim => {
+                    const hatalilar = allDenetimler.filter(denetim => {
                         if (denetim.kontrolListesi) {
                             totalKontrolItems += denetim.kontrolListesi.length;
-                            denetim.kontrolListesi.forEach(item => {
+                            const hasNonCompliant = denetim.kontrolListesi.some(item => {
                                 if (item.durum === 'Uygun') {
                                     compliantCount++;
                                 } else if (item.durum === 'Uygun Değil') {
                                     nonCompliantCount++;
+                                    return true; // Hatalı bir madde bulundu
                                 }
+                                return false;
                             });
+                            return hasNonCompliant;
                         }
+                        return false;
                     });
-
+                    
                     setDashboardData({
                         totalDenetimler,
                         compliantCount,
                         nonCompliantCount,
                         totalKontrolItems,
                     });
-                    setDenetimler(allDenetimler);
-                } else if (!error) { // <-- Bu satır, error state'ine bağımlıdır.
+                    setHataliDenetimler(hatalilar);
+                } else if (!error) {
                     // Veri yoksa dashboard'u sıfırla
                     setDashboardData(null);
-                    setDenetimler([]);
+                    setHataliDenetimler([]);
                 }
                 setLoading(false);
             }
         };
 
-        fetchDashboardData();
-    }, [refreshTrigger, showMessage, error]); // <-- 'error' buraya eklendi.
+        fetchAndProcessData();
+    }, [refreshTrigger, showMessage]);
 
     // Hatalı denetim detayına gitmek için
     const handleDenetimClick = (denetim) => {
@@ -98,8 +104,6 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
             </div>
         );
     }
-
-    const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi && d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
 
     return (
         <div className="p-4 sm:p-6 bg-gray-100 min-h-screen rounded-lg shadow-md">
@@ -129,9 +133,9 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
                 
                     {/* Hatalı denetimler listesi */}
                     <h3 className="text-2xl font-bold mt-8 mb-4 text-gray-800">Hatalı Denetimler</h3>
-                    {hatalıDenetimler.length > 0 ? (
+                    {hataliDenetimler.length > 0 ? (
                         <ul className="space-y-4">
-                            {hatalıDenetimler.map((denetim) => (
+                            {hataliDenetimler.map((denetim) => (
                                 <li 
                                     key={denetim._id || denetim.id} 
                                     onClick={() => handleDenetimClick(denetim)}
