@@ -43,39 +43,19 @@ const DenetimFormu = ({ setCurrentView }) => {
         );
     };
 
-    const handleFotoChange = async (maddeId, file) => {
-        if (!file) return;
-
+    const handleFotoChange = (maddeId, file) => {
+        // Fotoğrafı Base64'e çevirme ve state'e kaydetme
         const reader = new FileReader();
-        reader.onloadend = () => {
-            const img = new Image();
-            img.src = reader.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > MAX_WIDTH) {
-                    height = height * (MAX_WIDTH / width);
-                    width = MAX_WIDTH;
-                }
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                const optimizedImage = canvas.toDataURL('image/jpeg', 0.7);
-
-                setFormData(prevData =>
-                    prevData.map(madde =>
-                        madde.id === maddeId ? { ...madde, foto: optimizedImage } : madde
-                    )
-                );
-            };
+        reader.onload = (e) => {
+            setFormData(prevData =>
+                prevData.map(madde =>
+                    madde.id === maddeId ? { ...madde, foto: e.target.result } : madde
+                )
+            );
         };
-        reader.readAsDataURL(file);
+        if (file) {
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async () => {
@@ -86,13 +66,13 @@ const DenetimFormu = ({ setCurrentView }) => {
         };
         await saveDenetim(denetim);
         alert('Denetim başarıyla kaydedildi!');
-        setCurrentView('menu'); // Ana menüye dön
+        setCurrentView('menu');
     };
 
     return (
         <div className="denetim-formu">
             <h2>Kaba İnşaat Kontrol Formu</h2>
-            <p>Konum: {konum ? `Lat: ${konum.latitude}, Lon: ${konum.longitude}` : 'Konum alınıyor...'}</p>
+            <p>Konum: {konum ? `Enlem: ${konum.latitude}, Boylam: ${konum.longitude}` : 'Konum alınıyor...'}</p>
             {formData.map(madde => (
                 <div key={madde.id} className="kontrol-maddesi">
                     <h4>{madde.metin}</h4>
