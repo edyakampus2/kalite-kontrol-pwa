@@ -1,5 +1,5 @@
-// Tarih: 08.08.2025 Saat: 13:30
 // src/components/Dashboard.js
+// Tarih: 08.08.2025 Saat: 14:30
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -17,51 +17,71 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             setLoading(true);
-            try {
-                const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/dashboard');
-                setDashboardData(response.data.ozet);
-                setDenetimler(response.data.data);
-                setLoading(false);
-            } catch (err) {
-                console.error("Dashboard verileri sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
-                try {
-                    const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
-                    const ozet = {
-                        toplamDenetim: indexedDBDenetimler.length,
-                        hataSayilari: {},
-                        hataFotograflari: []
-                    };
+            setError(null);
+            let allDenetimler = [];
 
-                    indexedDBDenetimler.forEach(denetim => {
-                        denetim.formData.forEach(madde => {
-                            if (madde.durum === 'Uygun Değil') {
-                                if (ozet.hataSayilari[madde.metin]) {
-                                    ozet.hataSayilari[madde.metin]++;
-                                } else {
-                                    ozet.hataSayilari[madde.metin] = 1;
-                                }
-                                if (madde.foto) {
-                                    ozet.hataFotograflari.push({
-                                        madde: madde.metin,
-                                        not: madde.not,
-                                        foto: madde.foto,
-                                        tarih: denetim.tarih
-                                    });
-                                }
+            if (navigator.onLine) {
+                // İnternet varsa, API'den tüm denetimleri çekmeyi dene
+                try {
+                    const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
+                    allDenetimler = response.data;
+                    console.log('Veriler sunucudan çekildi.');
+                    setModalMessage('');
+                } catch (apiError) {
+                    // API'dan çekilemezse, IndexedDB'ye dön
+                    console.error('API’den veri çekilirken hata oluştu, IndexedDB’den çekiliyor:', apiError);
+                    try {
+                        allDenetimler = await getDenetimlerFromIndexedDB();
+                        setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
+                    } catch (dbError) {
+                        setError('Hata: Veriler yerel depodan da alınamadı. Lütfen daha sonra tekrar deneyin.');
+                        console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
+                    }
+                }
+            } else {
+                // İnternet yoksa doğrudan IndexedDB'den çek
+                try {
+                    allDenetimler = await getDenetimlerFromIndexedDB();
+                    setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
+                } catch (dbError) {
+                    setError('Hata: Çevrimdışı modda veriler yerel depodan alınamadı. Lütfen daha sonra tekrar deneyin.');
+                    console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
+                }
+            }
+
+            if (allDenetimler.length > 0) {
+                // Dashboard verilerini hesapla
+                const totalDenetimler = allDenetimler.length;
+                let compliantCount = 0;
+                let nonCompliantCount = 0;
+                let totalKontrolItems = 0;
+                
+                allDenetimler.forEach(denetim => {
+                    if (denetim.kontrolListesi) {
+                        totalKontrolItems += denetim.kontrolListesi.length;
+                        denetim.kontrolListesi.forEach(item => {
+                            if (item.durum === 'Uygun') {
+                                compliantCount++;
+                            } else if (item.durum === 'Uygun Değil') {
+                                nonCompliantCount++;
                             }
                         });
-                    });
+                    }
+                });
 
-                    setDashboardData(ozet);
-                    setDenetimler(indexedDBDenetimler);
-                    setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
-                    setShowModal(true);
-                } catch (indexedDBError) {
-                    console.error("IndexedDB'den dashboard verileri getirilirken hata oluştu:", indexedDBError);
-                    setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
-                }
-                setLoading(false);
+                setDashboardData({
+                    totalDenetimler,
+                    compliantCount,
+                    nonCompliantCount,
+                    totalKontrolItems,
+                });
+                setDenetimler(allDenetimler);
+            } else if (!error) {
+                setDashboardData(null);
+                setDenetimler([]);
             }
+            setLoading(false);
+            if(modalMessage) setShowModal(true);
         };
 
         fetchDashboardData();
@@ -76,32 +96,60 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
         setShowModal(false);
     };
 
-    if (loading) return <div>Veriler yükleniyor...</div>;
-    if (error) return <div>Hata: {error}</div>;
-    if (!dashboardData) return <div>Veri bulunamadı.</div>;
+    if (loading) return <div className="p-4 text-center">Veriler yükleniyor...</div>;
+    if (error) return <div className="p-4 text-center text-red-500">Hata: {error}</div>;
 
-    const hatalıDenetimler = denetimler.filter(d => d.formData.some(m => m.durum === 'Uygun Değil'));
+    const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
 
     return (
-        <div className="dashboard-container">
-            <h2>Genel Denetim Özeti</h2>
-            <p>Toplam Yapılan Denetim Sayısı: <strong>{denetimler.length}</strong></p>
-
-            <h3>Hatalı Denetimler</h3>
+        <div className="p-4 denetim-dashboard">
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+            {dashboardData ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Toplam Denetim Sayısı</h3>
+                        <p className="text-4xl font-bold text-blue-600 mt-2">{dashboardData.totalDenetimler}</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Toplam Kontrol Maddesi</h3>
+                        <p className="text-4xl font-bold text-gray-600 mt-2">{dashboardData.totalKontrolItems}</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Uygun Madde Sayısı</h3>
+                        <p className="text-4xl font-bold text-green-600 mt-2">{dashboardData.compliantCount}</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Uygun Olmayan Madde Sayısı</h3>
+                        <p className="text-4xl font-bold text-red-600 mt-2">{dashboardData.nonCompliantCount}</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center text-gray-500">
+                    <p>Gösterilecek veri bulunamadı.</p>
+                </div>
+            )}
+            <h3 className="text-xl font-bold mt-8 mb-4">Hatalı Denetimler</h3>
             {hatalıDenetimler.length > 0 ? (
-                <ol>
+                <ul className="list-disc list-inside space-y-2 text-left">
                     {hatalıDenetimler.map((denetim, index) => (
-                        <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
+                        <li key={denetim._id || denetim.id} 
+                            onClick={() => handleDenetimClick(denetim)}
+                            className="p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition duration-300"
+                        >
                             ({index + 1}) Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}
                         </li>
                     ))}
-                </ol>
+                </ul>
             ) : (
-                <p>Henüz hatalı denetim bulunmuyor.</p>
+                <p className="text-center text-gray-500">Henüz hatalı denetim bulunmuyor.</p>
             )}
-
-            <div className="form-action-buttons">
-                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
+            <div className="form-action-buttons mt-8">
+                <button 
+                    onClick={() => setCurrentView('menu')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
+                >
+                    Ana Menüye Dön
+                </button>
             </div>
             {showModal && (
                 <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
@@ -111,4 +159,3 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
 };
 
 export default Dashboard;
-
