@@ -1,5 +1,5 @@
-// Tarih: 08.08.2025 Saat: 12:45
 // src/components/DenetimFormu.js
+// Tarih: 08.08.2025 Saat: 12:45
 
 import React, { useState, useEffect } from 'react';
 import { saveDenetim } from '../services/IndexedDBService';
@@ -16,12 +16,10 @@ const fileToBase64 = (file) => {
     });
 };
 
-const DenetimFormu = ({ setCurrentView }) => {
+const DenetimFormu = ({ setCurrentView, setRefreshTrigger, setModalMessage, setShowModal }) => {
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
         const maddeler = getFormMaddeleri();
@@ -88,7 +86,15 @@ const DenetimFormu = ({ setCurrentView }) => {
             setModalMessage("Denetim başarıyla kaydedildi.");
             setShowModal(true);
             setLoading(false);
-            setCurrentView('menu');
+            
+            // App.js'deki tetikleyiciyi güncelle
+            setRefreshTrigger(prev => !prev);
+            
+            // Başarılı bir kayıttan sonra ana menüye dön
+            setTimeout(() => {
+                setCurrentView('menu');
+            }, 2000); // 2 saniye sonra yönlendir
+            
         } catch (error) {
             console.error("Denetim kaydedilirken hata oluştu:", error);
             setModalMessage("Denetim kaydedilirken bir hata oluştu.");
