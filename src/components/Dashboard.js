@@ -65,7 +65,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
                         totalKontrolItems,
                     });
                     setDenetimler(allDenetimler);
-                } else if (!error) {
+                } else if (!error) { // <-- Bu satır, error state'ine bağımlıdır.
                     // Veri yoksa dashboard'u sıfırla
                     setDashboardData(null);
                     setDenetimler([]);
@@ -75,7 +75,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
         };
 
         fetchDashboardData();
-    }, [refreshTrigger, showMessage]);
+    }, [refreshTrigger, showMessage, error]); // <-- 'error' buraya eklendi.
 
     // Hatalı denetim detayına gitmek için
     const handleDenetimClick = (denetim) => {
