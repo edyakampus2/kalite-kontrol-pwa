@@ -1,10 +1,9 @@
 // Tarih: 08.08.2025
 // Açıklama: Proje için tüm bileşenleri ve servisleri içeren tek bir dosya.
-// Bu dosya, derleme hatalarını çözmek amacıyla tüm bileşenleri birleştirir.
+// Bu sürüm, kullanılmayan 'axios' importunu kaldırarak derleme hatasını giderir.
 // Gerekli servisler ve bileşenler, kodun içinde mock olarak tanımlanmıştır.
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 // --- Hizmetler ve Yardımcı Bileşenler ---
 // 'IndexedDBService' için mock implementasyon. Dosya yolu hatasını çözmek için burada tanımlanmıştır.
