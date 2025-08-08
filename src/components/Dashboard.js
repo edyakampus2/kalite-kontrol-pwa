@@ -1,11 +1,9 @@
 // Dosya: src/components/Dashboard.js
 // Tarih: 08.08.2025
-// Saat: 17:30
+// Saat: 17:35
 
 // React'in temel fonksiyonlarını ve state yönetimini kullanmak için import ediyoruz
 import React, { useState, useEffect } from 'react';
-// Denetim modelini import ediyoruz (eğer varsa, kodu daha okunabilir hale getirmek için)
-import { Denetim } from '../models/Denetim';
 
 // ===== STİL SABİTLERİ =====
 // Tailwind CSS sınıflarını kullanarak görsel olarak daha çekici bir tasarım oluşturuyoruz.
