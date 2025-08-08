@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 13:45
+// Tarih: 08.08.2025 Saat: 13:30
 // src/components/DenetimListesi.js
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 import MessageModal from './MessageModal';
 
-const DenetimListesi = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u eklendi
+const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -42,10 +42,6 @@ const DenetimListesi = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'
         setShowModal(false);
     };
 
-    const handleDenetimClick = (denetim) => {
-      navigateTo('denetimDetayi', denetim); // Yeni navigateTo fonksiyonu kullanıldı
-    };
-
     if (loading) {
         return <div className="denetim-listesi">Veriler yükleniyor...</div>;
     }
@@ -60,7 +56,7 @@ const DenetimListesi = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'
             {denetimler.length > 0 ? (
                 <ul>
                     {denetimler.map(denetim => (
-                        <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
+                        <li key={denetim._id || denetim.id}>
                             <p>Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}</p>
                             <p>Konum: Lat: {denetim.konum?.latitude || 'N/A'}, Lon: {denetim.konum?.longitude || 'N/A'}</p>
                         </li>
@@ -70,7 +66,7 @@ const DenetimListesi = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'
                 <p>Henüz kaydedilmiş denetim bulunmuyor.</p>
             )}
             <div className="form-action-buttons">
-                <button onClick={() => navigateTo('menu')}>Ana Menüye Dön</button>
+                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
             </div>
             {showModal && (
                 <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
@@ -80,3 +76,4 @@ const DenetimListesi = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'
 };
 
 export default DenetimListesi;
+

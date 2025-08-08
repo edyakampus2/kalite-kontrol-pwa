@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 13:45
+// Tarih: 08.08.2025 Saat: 13:30
 // src/components/Dashboard.js
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +6,7 @@ import axios from 'axios';
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 import MessageModal from './MessageModal';
 
-const Dashboard = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u eklendi
+const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -68,7 +68,8 @@ const Dashboard = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u ekl
     }, [refreshTrigger]);
 
     const handleDenetimClick = (denetim) => {
-        navigateTo('denetimDetayi', denetim); // Yeni navigateTo fonksiyonu kullanıldı
+        setSelectedDenetim(denetim);
+        setCurrentView('denetimDetayi');
     };
 
     const closeModalAndNavigate = () => {
@@ -100,7 +101,7 @@ const Dashboard = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u ekl
             )}
 
             <div className="form-action-buttons">
-                <button onClick={() => navigateTo('menu')}>Ana Menüye Dön</button>
+                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
             </div>
             {showModal && (
                 <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
@@ -110,3 +111,4 @@ const Dashboard = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u ekl
 };
 
 export default Dashboard;
+
