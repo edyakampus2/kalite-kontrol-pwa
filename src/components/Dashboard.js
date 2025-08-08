@@ -1,13 +1,13 @@
 // src/components/Dashboard.js
-// Tarih: 08.08.2025 Saat: 16:30
+// Tarih: 08.08.2025 Saat: 18:00
 // Açıklama: Denetim verilerinden özet istatistikler ve hatalı denetimlerin listesini gösterir.
-// Veri çekme, hesaplama ve state yönetimini daha optimize hale getirilmiştir.
-// Dosya yolu (../services/IndexedDBService) hatası için son kontrol ve düzeltme yapıldı.
+// Her denetim objesinin içinde 'denetimListesi' adında bir dizi olduğu varsayılarak kod tamamlandı.
+// Hatalı denetimler, 'durum' alanı "Uygun Değil" olan maddeleri içeren denetimlerdir.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// *** DİKKAT: Bu import satırının doğru olduğundan emin olun.
-// Dosyanızın src/services/IndexedDBService.js olarak adlandırıldığından emin olun.
+// Dosya yolu kontrolü: '../services/IndexedDBService' klasör yapınızla uyumlu olmalıdır.
+// Büyük/küçük harf duyarlılığına dikkat edin: 'services' ve 'IndexedDBService.js'
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMessage }) => {
@@ -45,26 +45,33 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
             } finally {
                 // Veri işleme ve state güncelleme
                 if (allDenetimler.length > 0) {
+                    console.log('İşlenen denetim verileri:', allDenetimler);
+
                     const totalDenetimler = allDenetimler.length;
                     let compliantCount = 0;
                     let nonCompliantCount = 0;
                     let totalKontrolItems = 0;
                     
                     const hatalilar = allDenetimler.filter(denetim => {
-                        if (denetim.kontrolListesi) {
-                            totalKontrolItems += denetim.kontrolListesi.length;
-                            const hasNonCompliant = denetim.kontrolListesi.some(item => {
+                        let hasNonCompliant = false;
+
+                        // Her denetim objesinin içindeki denetimListesi'ni kontrol et
+                        if (denetim.denetimListesi && Array.isArray(denetim.denetimListesi) && denetim.denetimListesi.length > 0) {
+                            totalKontrolItems += denetim.denetimListesi.length;
+                            
+                            // "Uygun Değil" maddesi var mı diye kontrol et
+                            hasNonCompliant = denetim.denetimListesi.some(item => {
                                 if (item.durum === 'Uygun') {
                                     compliantCount++;
                                 } else if (item.durum === 'Uygun Değil') {
                                     nonCompliantCount++;
-                                    return true; // Hatalı bir madde bulundu
+                                    return true; // Hatalı bir madde bulundu, döngüden çık
                                 }
                                 return false;
                             });
-                            return hasNonCompliant;
                         }
-                        return false;
+                        
+                        return hasNonCompliant;
                     });
                     
                     setDashboardData({
@@ -84,7 +91,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
         };
 
         fetchAndProcessData();
-    }, [refreshTrigger, showMessage, error]); // 'error' bağımlılığı eklendi
+    }, [refreshTrigger, showMessage, error]);
 
     // Hatalı denetim detayına gitmek için
     const handleDenetimClick = (denetim) => {
@@ -92,6 +99,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
         setCurrentView('detail');
     };
 
+    // Yükleme ekranı
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -100,6 +108,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
         );
     }
 
+    // Hata ekranı
     if (error) {
         return (
             <div className="flex items-center justify-center h-screen bg-red-100 text-red-700 p-8 rounded-lg shadow-md">
