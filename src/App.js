@@ -1,7 +1,7 @@
 // Tarih: 08.08.2025
 // Açıklama: Proje için tüm bileşenleri ve servisleri içeren tek bir dosya.
-// Bu sürüm, kullanılmayan 'axios' importunu kaldırarak derleme hatasını giderir.
-// Gerekli servisler ve bileşenler, kodun içinde mock olarak tanımlanmıştır.
+// Bu sürüm, kullanılmayan 'axios' importunu kaldırarak ve Denetim Formu'nu ekleyerek
+// derleme hatasını giderir. Gerekli servisler ve bileşenler, kodun içinde mock olarak tanımlanmıştır.
 
 import React, { useState, useEffect } from 'react';
 
@@ -29,7 +29,7 @@ const getDenetimler = async () => {
 // 'MessageModal' için mock implementasyon. Dosya yolu hatasını çözmek için burada tanımlanmıştır.
 const MessageModal = ({ message, onClose }) => {
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
                 <p className="text-gray-800 text-lg mb-4">{message}</p>
                 <button
@@ -76,17 +76,118 @@ const Menu = ({ setCurrentView }) => {
 
 // DenetimFormu Bileşeni
 const DenetimFormu = ({ setCurrentView }) => {
-    // Bu, form için bir placeholder bileşendir.
+    // Kontrol listesi için örnek veri
+    const initialKontrolListesi = [
+        { metin: "Ekipmanlar kontrol edildi mi?", durum: null, not: "" },
+        { metin: "Çalışma alanı temiz mi?", durum: null, not: "" },
+        { metin: "Güvenlik önlemleri alındı mı?", durum: null, not: "" },
+        { metin: "Kalite standartları karşılanıyor mu?", durum: null, not: "" },
+    ];
+    
+    const [kontrolListesi, setKontrolListesi] = useState(initialKontrolListesi);
+    const [message, setMessage] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
+    const handleDurumChange = (index, durum) => {
+        const yeniListe = [...kontrolListesi];
+        yeniListe[index].durum = durum;
+        setKontrolListesi(yeniListe);
+    };
+
+    const handleNotChange = (index, not) => {
+        const yeniListe = [...kontrolListesi];
+        yeniListe[index].not = not;
+        setKontrolListesi(yeniListe);
+    };
+
+    const handleKaydet = () => {
+        // Formun tamamlandığından emin olmak için bir kontrol yapabilirsiniz
+        const eksikKontroller = kontrolListesi.filter(item => item.durum === null);
+        if (eksikKontroller.length > 0) {
+            setMessage('Lütfen tüm kontrol maddelerini doldurun.');
+            setShowModal(true);
+            return;
+        }
+
+        // Burada veriyi işleme (örneğin IndexedDB'ye kaydetme) mantığı gelebilir.
+        // Şimdilik sadece konsola yazdırıyoruz.
+        console.log('Denetim Sonuçları:', kontrolListesi);
+        setMessage('Denetim başarıyla kaydedildi!');
+        setShowModal(true);
+        // Ana menüye dönmek için butona tıklanana kadar bekleyelim
+    };
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">Yeni Denetim Formu</h2>
-            <p className="text-gray-600 mb-8">Burada denetim formu olacak.</p>
-            <button
-                onClick={() => setCurrentView('menu')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
-            >
-                Ana Menüye Dön
-            </button>
+        <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4 font-inter">
+            <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-xl">
+                <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Yeni Denetim Formu</h2>
+                
+                <div className="space-y-6">
+                    {kontrolListesi.map((item, index) => (
+                        <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.metin}</h3>
+                            <div className="flex items-center space-x-4 mb-2">
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`durum-${index}`}
+                                        value="Uygun"
+                                        checked={item.durum === 'Uygun'}
+                                        onChange={() => handleDurumChange(index, 'Uygun')}
+                                        className="form-radio h-4 w-4 text-green-600"
+                                    />
+                                    <span className="ml-2 text-gray-700">Uygun</span>
+                                </label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`durum-${index}`}
+                                        value="Uygun Değil"
+                                        checked={item.durum === 'Uygun Değil'}
+                                        onChange={() => handleDurumChange(index, 'Uygun Değil')}
+                                        className="form-radio h-4 w-4 text-red-600"
+                                    />
+                                    <span className="ml-2 text-gray-700">Uygun Değil</span>
+                                </label>
+                            </div>
+                            {item.durum === 'Uygun Değil' && (
+                                <textarea
+                                    value={item.not}
+                                    onChange={(e) => handleNotChange(index, e.target.value)}
+                                    placeholder="Hatanın sebebini not alın..."
+                                    className="mt-2 w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                />
+                            )}
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="flex justify-between items-center mt-8 space-x-4">
+                    <button
+                        onClick={() => setCurrentView('menu')}
+                        className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
+                    >
+                        Vazgeç
+                    </button>
+                    <button
+                        onClick={handleKaydet}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300"
+                    >
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+            {showModal && (
+                <MessageModal 
+                    message={message} 
+                    onClose={() => {
+                        setShowModal(false);
+                        if (message === 'Denetim başarıyla kaydedildi!') {
+                            setCurrentView('menu');
+                        }
+                    }} 
+                />
+            )}
         </div>
     );
 };
