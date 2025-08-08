@@ -12,7 +12,7 @@ import MessageModal from './MessageModal';
 // Tailwind CSS sınıflarını kullanarak daha iyi bir estetik için stil sabitleri oluşturuyoruz.
 const cardStyle = "bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-between transition-transform transform hover:scale-105 duration-300 ease-in-out";
 const valueStyle = "text-4xl sm:text-5xl font-bold mt-2 text-center text-indigo-600 dark:text-indigo-400";
-const labelStyle = "text-sm text-gray-500 dark:text-gray-400 mt-2 text-center uppercase tracking-wide";
+const labelStyle = "text-lg font-semibold text-gray-700 dark:text-gray-300 text-center";
 const listStyle = "bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mt-8";
 const buttonStyle = "bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 transform hover:scale-105";
 
@@ -137,25 +137,25 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* Toplam Denetim Kartı */}
                     <div className={cardStyle}>
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Toplam Denetim Sayısı</h3>
+                        <h3 className={labelStyle}>Toplam Denetim Sayısı</h3>
                         <p className={valueStyle}>{dashboardData.totalDenetimler}</p>
                     </div>
 
                     {/* Toplam Kontrol Maddesi Kartı */}
                     <div className={cardStyle}>
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Toplam Kontrol Maddesi</h3>
+                        <h3 className={labelStyle}>Toplam Kontrol Maddesi</h3>
                         <p className={valueStyle}>{dashboardData.totalKontrolItems}</p>
                     </div>
 
                     {/* Uygun Madde Kartı */}
                     <div className={cardStyle}>
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Uygun Madde Sayısı</h3>
+                        <h3 className={labelStyle}>Uygun Madde Sayısı</h3>
                         <p className={`${valueStyle} text-green-600 dark:text-green-400`}>{dashboardData.compliantCount}</p>
                     </div>
 
                     {/* Uygun Olmayan Madde Kartı */}
                     <div className={cardStyle}>
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 text-center">Uygun Olmayan Madde Sayısı</h3>
+                        <h3 className={labelStyle}>Uygun Olmayan Madde Sayısı</h3>
                         <p className={`${valueStyle} text-red-600 dark:text-red-400`}>{dashboardData.nonCompliantCount}</p>
                     </div>
                 </div>
