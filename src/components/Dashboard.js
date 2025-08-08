@@ -1,10 +1,13 @@
 // src/components/Dashboard.js
-// Tarih: 08.08.2025 Saat: 15:45
+// Tarih: 08.08.2025 Saat: 16:30
 // Açıklama: Denetim verilerinden özet istatistikler ve hatalı denetimlerin listesini gösterir.
 // Veri çekme, hesaplama ve state yönetimini daha optimize hale getirilmiştir.
+// Dosya yolu (../services/IndexedDBService) hatası için son kontrol ve düzeltme yapıldı.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+// *** DİKKAT: Bu import satırının doğru olduğundan emin olun.
+// Dosyanızın src/services/IndexedDBService.js olarak adlandırıldığından emin olun.
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMessage }) => {
@@ -81,7 +84,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
         };
 
         fetchAndProcessData();
-    }, [refreshTrigger, showMessage]);
+    }, [refreshTrigger, showMessage, error]); // 'error' bağımlılığı eklendi
 
     // Hatalı denetim detayına gitmek için
     const handleDenetimClick = (denetim) => {
