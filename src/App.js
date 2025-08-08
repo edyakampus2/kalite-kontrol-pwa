@@ -1,25 +1,27 @@
-// Tarih: 08.08.2025 Saat: 11:30
+// Tarih: 08.08.2025 Saat: 11:45
 // src/App.js
 
 import React, { useState } from 'react';
 import DenetimFormu from './components/DenetimFormu';
 import DenetimListesi from './components/DenetimListesi';
-import Dashboard from './components/Dashboard'; // Yeni eklenen Özet bileşeni
-import Menu from './components/Menu'; // Yeni eklenen Menu bileşeni
+import Menu from './components/Menu';
+import Dashboard from './components/Dashboard'; // Dashboard bileşeni doğru şekilde içe aktarılıyor.
 import './App.css';
 
 function App() {
   const [currentView, setCurrentView] = useState('menu');
 
   const renderView = () => {
-    if (currentView === 'form') {
-      return <DenetimFormu setCurrentView={setCurrentView} />;
+    switch (currentView) {
+      case 'form':
+        return <DenetimFormu setCurrentView={setCurrentView} />;
+      case 'list':
+        return <DenetimListesi setCurrentView={setCurrentView} />;
+      case 'dashboard':
+        return <Dashboard setCurrentView={setCurrentView} />; // Dashboard bileşeni artık burada kullanılıyor
+      default:
+        return <Menu setCurrentView={setCurrentView} />;
     }
-    if (currentView === 'list') {
-      return <DenetimListesi setCurrentView={setCurrentView} />;
-    }
-    // Artık menüyü ayrı bir bileşen olarak render ediyoruz
-    return <Menu setCurrentView={setCurrentView} />;
   };
 
   return (
