@@ -1,30 +1,25 @@
 // src/components/DenetimFormu.js
-// Tarih: 08.08.2025 Saat: 12:45
+// Tarih: 08.08.2025 Saat: 14:00
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { saveDenetim } from '../services/IndexedDBService';
 import { getFormMaddeleri } from '../data/FormVerileri';
 import MessageModal from './MessageModal';
 
-// Dosyayı Base64 stringine dönüştüren yardımcı fonksiyon
-const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-};
-
-const DenetimFormu = ({ setCurrentView, setRefreshTrigger, setModalMessage, setShowModal }) => {
+const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
+        // Form maddelerini yükle
         const maddeler = getFormMaddeleri();
         setFormData(maddeler);
 
+        // Kullanıcının konumunu al
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -57,66 +52,84 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger, setModalMessage, setS
     };
 
     const handleFotoChange = (maddeId, file) => {
-        if (!file) return;
-
-        fileToBase64(file).then(base64String => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
             setFormData(prevData =>
                 prevData.map(madde =>
-                    madde.id === maddeId ? { ...madde, foto: base64String } : madde
+                    madde.id === maddeId ? { ...madde, foto: reader.result } : madde
                 )
             );
-        }).catch(error => {
-            console.error("Fotoğraf dönüştürme hatası:", error);
-            setModalMessage("Fotoğraf dönüştürülürken bir hata oluştu.");
-            setShowModal(true);
-        });
+        };
+        if (file) {
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async () => {
         setLoading(true);
-        // Form verilerini kontrol edip gönderilecek hale getirme
-        const denetimData = {
-            tarih: new Date(),
-            konum: konum,
-            formData: formData,
+        const denetim = {
+            tarih: new Date().toISOString(),
+            konum,
+            kontrolListesi: formData.map(({ foto, ...rest }) => ({
+                ...rest,
+                // Fotoğraf verisi varsa Base64 kısmını al
+                foto: foto ? foto.split(',')[1] : null,
+            })),
         };
 
         try {
-            await saveDenetim(denetimData);
-            setModalMessage("Denetim başarıyla kaydedildi.");
-            setShowModal(true);
-            setLoading(false);
-            
-            // App.js'deki tetikleyiciyi güncelle
-            setRefreshTrigger(prev => !prev);
-            
-            // Başarılı bir kayıttan sonra ana menüye dön
-            setTimeout(() => {
-                setCurrentView('menu');
-            }, 2000); // 2 saniye sonra yönlendir
-            
+            // Önce sunucuya kaydetmeyi dene
+            await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
+            setModalMessage('Denetim başarıyla sunucuya kaydedildi!');
         } catch (error) {
-            console.error("Denetim kaydedilirken hata oluştu:", error);
-            setModalMessage("Denetim kaydedilirken bir hata oluştu.");
-            setShowModal(true);
+            console.error("Denetim sunucuya kaydedilirken hata oluştu, IndexedDB'ye kaydediliyor:", error);
+            try {
+                // Sunucuya kaydedemezse, IndexedDB'ye kaydet
+                await saveDenetim(denetim);
+                setModalMessage('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
+            } catch (indexedDBError) {
+                console.error("Denetim IndexedDB'ye kaydedilirken hata oluştu:", indexedDBError);
+                setModalMessage('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+            }
+        } finally {
             setLoading(false);
+            setShowModal(true);
+            // Denetim listesinin yenilenmesi için tetikleyiciyi güncelle
+            setRefreshTrigger(prev => !prev);
         }
     };
-
+    
     const closeModal = () => {
         setShowModal(false);
+        // Modal kapatıldığında ana menüye dön
+        setCurrentView('menu');
     };
 
     return (
         <div className="denetim-formu">
-            {loading && <p>Kaydediliyor...</p>}
-            <h2>Yeni Denetim</h2>
+            <h2>Yeni Denetim Formu</h2>
+            <div className="form-action-buttons">
+                <button onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Kaydediliyor...' : 'Denetimi Kaydet'}
+                </button>
+                <button onClick={() => setCurrentView('menu')} disabled={loading}>Ana Menüye Dön</button>
+            </div>
             {formData.map(madde => (
                 <div key={madde.id} className="kontrol-maddesi">
-                    <h4>{madde.metin}</h4>
+                    <h4>{madde.madde}</h4>
                     <div className="durum-secenekleri">
-                        <button onClick={() => handleDurumChange(madde.id, 'Uygun')} className={madde.durum === 'Uygun' ? 'active' : ''}>Uygun</button>
-                        <button onClick={() => handleDurumChange(madde.id, 'Uygun Değil')} className={madde.durum === 'Uygun Değil' ? 'active' : ''}>Uygun Değil</button>
+                        <button
+                            className={madde.durum === 'Uygun' ? 'active' : ''}
+                            onClick={() => handleDurumChange(madde.id, 'Uygun')}
+                        >
+                            Uygun
+                        </button>
+                        <button
+                            className={madde.durum === 'Uygun Değil' ? 'active' : ''}
+                            onClick={() => handleDurumChange(madde.id, 'Uygun Değil')}
+                        >
+                            Uygun Değil
+                        </button>
                     </div>
                     {madde.durum === 'Uygun Değil' && (
                         <div>
@@ -129,7 +142,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger, setModalMessage, setS
                             <textarea
                                 placeholder="Not ekle..."
                                 onChange={e => handleNotChange(madde.id, e.target.value)}
-                                value={madde.not || ''}
                             ></textarea>
                             {madde.foto && (
                                 <img src={madde.foto} alt="Kanıt" style={{ maxWidth: '100px', maxHeight: '100px' }} />
@@ -139,8 +151,10 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger, setModalMessage, setS
                 </div>
             ))}
             <div className="form-action-buttons">
-                <button onClick={handleSubmit}>Taslak Kaydet</button>
-                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
+                <button onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Kaydediliyor...' : 'Denetimi Kaydet'}
+                </button>
+                <button onClick={() => setCurrentView('menu')} disabled={loading}>Ana Menüye Dön</button>
             </div>
             {showModal && <MessageModal message={modalMessage} onClose={closeModal} />}
         </div>
