@@ -1,12 +1,12 @@
-// Tarih: 08.08.2025 Saat: 13:30
+// Tarih: 08.08.2025 Saat: 13:45
 // src/components/Dashboard.js
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Axios'u dahil ediyoruz
-import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService'; // IndexedDB servisinden çekme
-import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
+import axios from 'axios';
+import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
+import MessageModal from './MessageModal';
 
-const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => { // refreshTrigger prop'u eklendi
+const Dashboard = ({ navigateTo, refreshTrigger }) => { // navigateTo prop'u eklendi
     const [dashboardData, setDashboardData] = useState(null);
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -16,19 +16,16 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => { 
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            setLoading(true); // Veri çekme başladığında yükleniyor durumunu ayarla
+            setLoading(true);
             try {
-                // Önce uzaktaki sunucudan verileri çekmeyi dene
                 const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/dashboard');
                 setDashboardData(response.data.ozet);
                 setDenetimler(response.data.data);
                 setLoading(false);
             } catch (err) {
                 console.error("Dashboard verileri sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
-                // Sunucudan veri çekilemezse, IndexedDB'den çekmeyi dene
                 try {
                     const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
-                    // IndexedDB'den gelen veriyi dashboard formatına dönüştürme
                     const ozet = {
                         toplamDenetim: indexedDBDenetimler.length,
                         hataSayilari: {},
@@ -68,11 +65,10 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => { 
         };
 
         fetchDashboardData();
-    }, [refreshTrigger]); // refreshTrigger değiştiğinde verileri yeniden çek
+    }, [refreshTrigger]);
 
     const handleDenetimClick = (denetim) => {
-        setSelectedDenetim(denetim);
-        setCurrentView('denetimDetayi');
+        navigateTo('denetimDetayi', denetim); // Yeni navigateTo fonksiyonu kullanıldı
     };
 
     const closeModalAndNavigate = () => {
@@ -104,7 +100,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => { 
             )}
 
             <div className="form-action-buttons">
-                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
+                <button onClick={() => navigateTo('menu')}>Ana Menüye Dön</button>
             </div>
             {showModal && (
                 <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />

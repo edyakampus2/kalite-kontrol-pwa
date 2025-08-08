@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 13:30
+// Tarih: 08.08.2025 Saat: 13:45
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
@@ -15,34 +15,40 @@ import { getDenetimler as getDenetimlerFromIndexedDB, clearDenetimler as clearDe
 
 const App = () => {
   const [currentView, setCurrentView] = useState('menu');
+  const [previousView, setPreviousView] = useState(null); // Önceki sayfayı takip etmek için yeni state
   const [selectedDenetim, setSelectedDenetim] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [refreshTrigger, setRefreshTrigger] = useState(false); // Yeni denetimler için tetikleyici
+  const [refreshTrigger, setRefreshTrigger] = useState(false);
 
-  // Senkronizasyon işlemi için useEffect
+  // Sayfa navigasyonunu yöneten yardımcı fonksiyon
+  const navigateTo = (view, data = null) => {
+    setPreviousView(currentView);
+    setCurrentView(view);
+    if (data) {
+      setSelectedDenetim(data);
+    } else {
+      setSelectedDenetim(null);
+    }
+  };
+
   useEffect(() => {
     const syncOfflineData = async () => {
-      // İnternet bağlantısı var mı kontrol et
       if (navigator.onLine) {
         try {
-          // IndexedDB'den kaydedilmiş denetimleri çek
           const offlineDenetimler = await getDenetimlerFromIndexedDB();
           if (offlineDenetimler.length > 0) {
             setModalMessage(`${offlineDenetimler.length} adet çevrimdışı denetim sunucuya yükleniyor...`);
             setShowModal(true);
 
-            // Her bir denetimi API'ye gönder
             for (const denetim of offlineDenetimler) {
               await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
             }
 
-            // Gönderme işlemi bitince IndexedDB'yi temizle
             await clearDenetimlerInIndexedDB();
             setModalMessage('Tüm çevrimdışı denetimler başarıyla senkronize edildi.');
             setShowModal(true);
             
-            // Senkronizasyon bitince denetim listesinin yenilenmesini tetikle
             setRefreshTrigger(prev => !prev);
           }
         } catch (error) {
@@ -55,7 +61,6 @@ const App = () => {
 
     syncOfflineData();
 
-    // Çevrimiçi/çevrimdışı bağlantı değişimlerini dinle
     window.addEventListener('online', syncOfflineData);
     window.addEventListener('offline', () => {
       console.log('İnternet bağlantısı kesildi.');
@@ -65,7 +70,7 @@ const App = () => {
       window.removeEventListener('online', syncOfflineData);
       window.removeEventListener('offline', () => {});
     };
-  }, [currentView]); // currentView değiştiğinde senkronizasyonu kontrol et
+  }, [currentView]);
 
   const closeModal = () => {
     setShowModal(false);
@@ -74,19 +79,19 @@ const App = () => {
   const renderView = () => {
     switch (currentView) {
       case 'menu':
-        return <Menu setCurrentView={setCurrentView} />;
+        return <Menu navigateTo={navigateTo} />;
       case 'form':
-        return <DenetimFormu setCurrentView={setCurrentView} setRefreshTrigger={setRefreshTrigger} />;
+        return <DenetimFormu navigateTo={navigateTo} setRefreshTrigger={setRefreshTrigger} />;
       case 'list':
-        return <DenetimListesi setCurrentView={setCurrentView} refreshTrigger={refreshTrigger} />;
+        return <DenetimListesi navigateTo={navigateTo} refreshTrigger={refreshTrigger} />;
       case 'dashboard':
-        return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
+        return <Dashboard navigateTo={navigateTo} refreshTrigger={refreshTrigger} />;
       case 'denetimDetayi':
-        return <DenetimDetayi setCurrentView={setCurrentView} selectedDenetim={selectedDenetim} />; // Prop ismi düzeltildi
+        return <DenetimDetayi navigateTo={navigateTo} selectedDenetim={selectedDenetim} previousView={previousView} />; // previousView prop'u eklendi
       case 'yedekleme':
-        return <Yedekleme setCurrentView={setCurrentView} />;
+        return <Yedekleme navigateTo={navigateTo} />;
       default:
-        return <Menu setCurrentView={setCurrentView} />;
+        return <Menu navigateTo={navigateTo} />;
     }
   };
 
