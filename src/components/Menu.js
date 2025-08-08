@@ -1,29 +1,29 @@
-// Tarih: 08.08.2025 Saat: 12:00
+// Tarih: 08.08.2025 Saat: 12:15
 // src/components/Menu.js
 
 import React from 'react';
 
 const Menu = ({ setCurrentView }) => {
   return (
-    // Tailwind CSS sınıfları ile menü container'ı ortalanıyor ve dikey boşluklar ayarlanıyor.
-    <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-gray-100 rounded-lg shadow-xl m-4">
-      <h2 className="text-3xl font-bold text-gray-800 mb-4">Ana Menü</h2>
-      {/* Her bir butona modern bir görünüm için Tailwind CSS sınıfları eklendi. */}
+    // Tailwind CSS sınıfları ile koyu gri arka plan, ortalanmış içerik ve dikey boşluklar
+    <div className="flex flex-col items-center justify-center space-y-6 p-10 bg-gray-800 rounded-lg shadow-2xl m-4">
+      <h2 className="text-4xl font-extrabold text-white mb-6">Ana Menü</h2>
+      {/* Daha büyük ve daha canlı renklere sahip butonlar */}
       <button 
         onClick={() => setCurrentView('form')}
-        className="px-8 py-4 bg-blue-500 text-white font-bold rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-300 w-64 transform hover:scale-105"
+        className="px-10 py-5 bg-purple-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-purple-700 transition-colors duration-300 w-80 transform hover:scale-105"
       >
         Yeni Denetim Başlat
       </button>
       <button 
         onClick={() => setCurrentView('list')}
-        className="px-8 py-4 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition-colors duration-300 w-64 transform hover:scale-105"
+        className="px-10 py-5 bg-green-600 text-white font-bold text-lg rounded-full shadow-lg hover:bg-green-700 transition-colors duration-300 w-80 transform hover:scale-105"
       >
         Denetimlerim
       </button>
       <button 
         onClick={() => setCurrentView('dashboard')}
-        className="px-8 py-4 bg-yellow-500 text-white font-bold rounded-full shadow-lg hover:bg-yellow-600 transition-colors duration-300 w-64 transform hover:scale-105"
+        className="px-10 py-5 bg-amber-500 text-white font-bold text-lg rounded-full shadow-lg hover:bg-amber-600 transition-colors duration-300 w-80 transform hover:scale-105"
       >
         Dashboard
       </button>
