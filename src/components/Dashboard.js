@@ -1,5 +1,5 @@
 // src/components/Dashboard.js
-// Tarih: 08.08.2025 Saat: 18:00
+// Tarih: 08.08.2025 Saat: 18:30
 // Açıklama: Denetim verilerinden özet istatistikler ve hatalı denetimlerin listesini gösterir.
 // Her denetim objesinin içinde 'denetimListesi' adında bir dizi olduğu varsayılarak kod tamamlandı.
 // Hatalı denetimler, 'durum' alanı "Uygun Değil" olan maddeleri içeren denetimlerdir.
@@ -45,7 +45,9 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger, showMes
             } finally {
                 // Veri işleme ve state güncelleme
                 if (allDenetimler.length > 0) {
-                    console.log('İşlenen denetim verileri:', allDenetimler);
+                    // ** Lütfen bu satırı kopyalayıp konsoldan bana gönderin. **
+                    // Bu, denetim verinizin yapısını anlamamızı sağlayacaktır.
+                    console.log("Denetim verisinin ilk öğesi:", allDenetimler[0]);
 
                     const totalDenetimler = allDenetimler.length;
                     let compliantCount = 0;
