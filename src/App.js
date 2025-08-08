@@ -1,5 +1,5 @@
 // Tarih: 08.08.2025 Saat: 13:30
-// src/App.js
+// Açıklama: Bu dosya, uygulamanın ana bileşenidir ve farklı görünümleri (menü, form, liste, vb.) yönetir.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -18,66 +18,69 @@ const App = () => {
   const [selectedDenetim, setSelectedDenetim] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [refreshTrigger, setRefreshTrigger] = useState(false);
-
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Kullanıcıya mesaj göstermek için merkezi fonksiyon
+  const showMessage = (message) => {
+    setModalMessage(message);
+    setShowModal(true);
+  };
+  
+  // Denetim listesini yenilemek için merkezi fonksiyon
+  const refreshList = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
+  // Çevrimdışı verileri senkronize etme mantığı
   useEffect(() => {
     const syncOfflineData = async () => {
       if (navigator.onLine) {
         try {
           const offlineDenetimler = await getDenetimlerFromIndexedDB();
           if (offlineDenetimler.length > 0) {
-            setModalMessage(`${offlineDenetimler.length} adet çevrimdışı denetim sunucuya yükleniyor...`);
-            setShowModal(true);
+            showMessage(`${offlineDenetimler.length} adet çevrimdışı denetim sunucuya yükleniyor...`);
 
             for (const denetim of offlineDenetimler) {
               await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
             }
 
             await clearDenetimlerInIndexedDB();
-            setModalMessage('Tüm çevrimdışı denetimler başarıyla senkronize edildi.');
-            setShowModal(true);
+            showMessage('Tüm çevrimdışı denetimler başarıyla senkronize edildi.');
             
-            setRefreshTrigger(prev => !prev);
+            // Senkronizasyon sonrası listeyi yenile
+            refreshList();
           }
         } catch (error) {
           console.error("Çevrimdışı veriler senkronize edilirken hata oluştu:", error);
-          setModalMessage('Veri senkronizasyonu sırasında bir hata oluştu.');
-          setShowModal(true);
+          showMessage('Veri senkronizasyonu sırasında bir hata oluştu.');
         }
       }
     };
 
-    syncOfflineData();
-
+    // Uygulama yüklendiğinde ve internet bağlantısı geldiğinde senkronizasyonu başlat
     window.addEventListener('online', syncOfflineData);
-    window.addEventListener('offline', () => {
-      console.log('İnternet bağlantısı kesildi.');
-    });
-
+    syncOfflineData();
+    
+    // Temizleme fonksiyonu
     return () => {
       window.removeEventListener('online', syncOfflineData);
-      window.removeEventListener('offline', () => {});
     };
-  }, [currentView]);
-
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  }, []); // Bağımlılık dizisini boş bırakarak sadece bileşen mount edildiğinde çalışmasını sağla
 
   const renderView = () => {
     switch (currentView) {
       case 'menu':
         return <Menu setCurrentView={setCurrentView} />;
       case 'form':
-        return <DenetimFormu setCurrentView={setCurrentView} setRefreshTrigger={setRefreshTrigger} />;
+        return <DenetimFormu setCurrentView={setCurrentView} showMessage={showMessage} refreshList={refreshList} />;
       case 'list':
-        return <DenetimListesi setCurrentView={setCurrentView} refreshTrigger={refreshTrigger} />;
+        return <DenetimListesi setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
+      case 'detail':
+        return <DenetimDetayi setCurrentView={setCurrentView} denetim={selectedDenetim} />;
       case 'dashboard':
-        return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
-      case 'denetimDetayi':
-        return <DenetimDetayi setCurrentView={setCurrentView} selectedDenetim={selectedDenetim} />;
-      case 'yedekleme':
-        return <Yedekleme setCurrentView={setCurrentView} />;
+        return <Dashboard setCurrentView={setCurrentView} refreshTrigger={refreshTrigger} />;
+      case 'backup':
+        return <Yedekleme setCurrentView={setCurrentView} showMessage={showMessage} refreshList={refreshList} />;
       default:
         return <Menu setCurrentView={setCurrentView} />;
     }
@@ -85,11 +88,19 @@ const App = () => {
 
   return (
     <div className="App">
-      {renderView()}
-      {showModal && <MessageModal message={modalMessage} onClose={closeModal} />}
+      <header className="App-header">
+        <h1>Kalite Kontrol PWA</h1>
+      </header>
+      <main>
+        {renderView()}
+      </main>
+      <MessageModal
+        show={showModal}
+        message={modalMessage}
+        onClose={() => setShowModal(false)}
+      />
     </div>
   );
 };
 
 export default App;
-
