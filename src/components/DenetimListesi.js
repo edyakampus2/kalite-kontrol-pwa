@@ -12,7 +12,6 @@ const DenetimListesi = ({ setCurrentView, setSelectedDenetim, refreshTrigger, sh
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Denetim verilerini hem API'den hem de IndexedDB'den çeken ana fonksiyon
         const fetchDenetimler = async () => {
             setLoading(true);
             try {
@@ -24,13 +23,11 @@ const DenetimListesi = ({ setCurrentView, setSelectedDenetim, refreshTrigger, sh
                 console.error("Denetimler sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
                 showMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
                 try {
-                    // Sunucudan hata alınırsa, IndexedDB'den verileri çek
                     const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
                     setDenetimler(indexedDBDenetimler);
                     setError(null);
                 } catch (indexedDBError) {
                     console.error("IndexedDB'den denetimler getirilirken hata oluştu:", indexedDBError);
-                    // Her iki yerden de veri getirilemezse hata mesajı göster
                     setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
                     showMessage('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
                 }
@@ -40,10 +37,8 @@ const DenetimListesi = ({ setCurrentView, setSelectedDenetim, refreshTrigger, sh
         };
 
         fetchDenetimler();
-        // `refreshTrigger` değiştiğinde listeyi yeniden getir
     }, [refreshTrigger, showMessage]);
 
-    // Yükleniyor durumunu göster
     if (loading) {
         return (
             <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg shadow-md">
@@ -52,7 +47,6 @@ const DenetimListesi = ({ setCurrentView, setSelectedDenetim, refreshTrigger, sh
         );
     }
 
-    // Hata durumunu göster
     if (error) {
         return (
             <div className="flex items-center justify-center h-48 bg-red-100 text-red-700 rounded-lg shadow-md p-4">
@@ -61,10 +55,10 @@ const DenetimListesi = ({ setCurrentView, setSelectedDenetim, refreshTrigger, sh
         );
     }
 
-    // Bir denetim maddesine tıklanıldığında çalışacak fonksiyon
+    // Tıklama olayını denetim detayına yönlendirecek şekilde güncelliyoruz
     const handleItemClick = (denetim) => {
         setSelectedDenetim(denetim);
-        setCurrentView('detail');
+        setCurrentView('detail'); // App.js'deki 'detail' view'ına yönlendirir
     };
 
     return (
