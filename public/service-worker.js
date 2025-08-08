@@ -1,25 +1,34 @@
 // public/service-worker.js
+// Tarih: 08.08.2025 Saat: 18:45
+// Açıklama: Önbelleğe alma hatasını gidermek için statik dosya listesi güncellendi.
 
-const CACHE_NAME = 'kalite-kontrol-cache-v3'; // Önbellek adını güncelledik
+// Önbellek adını, yeni bir sürüm olduğunu belirtmek için her güncellemede değiştirin
+const CACHE_NAME = 'kalite-kontrol-cache-v4'; 
+
+// Sadece derleme sırasında adı değişmeyecek dosyaları listeye ekleyin.
+// CSS ve JS dosyaları genellikle derleme hash'i içerdiği için buraya eklenmemelidir.
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/static/css/main.css', // CSS dosyası
-  '/static/js/main.chunk.js', // Ana JS dosyası
-  '/static/js/0.chunk.js', // Eğer varsa diğer JS dosyası
-  // Diğer statik dosyaları (img, font vb.) buraya ekleyebilirsin
+  // Eğer uygulamanızda sabit yollara sahip resimler veya fontlar varsa buraya ekleyebilirsiniz.
+  // Örneğin: '/images/logo.png', '/fonts/my-font.woff2'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Önbelleğe alma işlemi tamamlandı. v2');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(error => {
-        console.error('Önbelleğe alma işleminde hata oluştu:', error);
+        console.log('Önbelleğe alma işlemi başladı. v4');
+        return cache.addAll(urlsToCache)
+          .then(() => {
+            console.log('Ön-önbellekleme başarılı.');
+          })
+          .catch(error => {
+            console.error('Ön-önbellekleme sırasında hata oluştu. Bazı dosyalar bulunamadı:', error);
+            // Hata olsa bile install işleminin devam etmesi için Promise'i çözüyoruz.
+            // Diğer dosyalar fetch event'i sırasında önbelleğe alınacaktır.
+          });
       })
   );
 });
@@ -33,8 +42,8 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
+        // Önbellekte varsa doğrudan önbellekten döndür
         if (response) {
-          // Önbellekte varsa doğrudan önbellekten döndür
           return response;
         }
         
@@ -42,15 +51,25 @@ self.addEventListener('fetch', event => {
         return fetch(event.request)
           .then(res => {
             // Ağdan çekilen dosyaları önbelleğe ekle
-            return caches.open(CACHE_NAME)
+            // Başarısız yanıtları (örneğin 404, 500) önbelleğe almıyoruz
+            if (!res || res.status !== 200 || res.type !== 'basic') {
+              return res;
+            }
+
+            // Başarılı yanıtı önbelleğe almak için clone() kullan
+            const responseToCache = res.clone();
+            
+            caches.open(CACHE_NAME)
               .then(cache => {
-                // Sadece başarılı yanıtları önbelleğe al
-                if (res.status === 200) {
-                  cache.put(event.request, res.clone());
-                }
-                return res;
+                cache.put(event.request, responseToCache);
               });
+            
+            return res;
           });
+      })
+      .catch(() => {
+        // İnternet bağlantısı yoksa ve önbellekte de dosya yoksa, kullanıcıya özel bir çevrimdışı sayfası gösterilebilir.
+        // Örneğin: return caches.match('/offline.html');
       })
   );
 });
