@@ -1,5 +1,5 @@
 // src/components/Dashboard.js
-// Tarih: 08.08.2025 Saat: 14:30
+// Tarih: 08.08.2025 Saat: 14:40
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -85,7 +85,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
         };
 
         fetchDashboardData();
-    }, [refreshTrigger]);
+    }, [refreshTrigger, error, modalMessage]); // Eksik bağımlılıklar buraya eklendi
 
     const handleDenetimClick = (denetim) => {
         setSelectedDenetim(denetim);
@@ -99,7 +99,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     if (loading) return <div className="p-4 text-center">Veriler yükleniyor...</div>;
     if (error) return <div className="p-4 text-center text-red-500">Hata: {error}</div>;
 
-    const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
+    const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi && d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
 
     return (
         <div className="p-4 denetim-dashboard">
