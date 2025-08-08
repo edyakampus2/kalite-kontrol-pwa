@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 12:50
+// Tarih: 08.08.2025 Saat: 13:30
 // src/components/Dashboard.js
 
 import React, { useState, useEffect } from 'react';
@@ -95,7 +95,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => { 
                 <ol>
                     {hatalıDenetimler.map((denetim, index) => (
                         <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
-                            ({index + 1}) Tarih: {new Date(denetim.tarih).toLocaleString()}
+                            ({index + 1}) Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}
                         </li>
                     ))}
                 </ol>

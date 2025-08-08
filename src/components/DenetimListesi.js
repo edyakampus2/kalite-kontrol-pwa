@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 12:50
+// Tarih: 08.08.2025 Saat: 13:30
 // src/components/DenetimListesi.js
 
 import React, { useState, useEffect } from 'react';
@@ -60,8 +60,8 @@ const DenetimListesi = ({ setCurrentView, refreshTrigger }) => { // refreshTrigg
                 <ul>
                     {denetimler.map(denetim => (
                         <li key={denetim._id || denetim.id}> {/* Hem _id (MongoDB) hem de id (IndexedDB) için */}
-                            <p>Tarih: {new Date(denetim.tarih).toLocaleString()}</p>
-                            <p>Konum: Lat: {denetim.konum.latitude}, Lon: {denetim.konum.longitude}</p>
+                            <p>Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}</p>
+                            <p>Konum: Lat: {denetim.konum?.latitude || 'N/A'}, Lon: {denetim.konum?.longitude || 'N/A'}</p>
                             {/* Diğer denetim detayları buraya eklenebilir */}
                         </li>
                     ))}

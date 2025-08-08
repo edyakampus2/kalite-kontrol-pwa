@@ -1,4 +1,4 @@
-// Tarih: 08.08.2025 Saat: 13:25
+// Tarih: 08.08.2025 Saat: 13:30
 // src/App.js
 
 import React, { useState, useEffect } from 'react';
@@ -82,7 +82,7 @@ const App = () => {
       case 'dashboard':
         return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
       case 'denetimDetayi':
-        return <DenetimDetayi setCurrentView={setCurrentView} denetim={selectedDenetim} />;
+        return <DenetimDetayi setCurrentView={setCurrentView} selectedDenetim={selectedDenetim} />; // Prop ismi düzeltildi
       case 'yedekleme':
         return <Yedekleme setCurrentView={setCurrentView} />;
       default:
