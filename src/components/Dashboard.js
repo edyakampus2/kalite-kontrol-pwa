@@ -1,12 +1,14 @@
 // Tarih: 08.08.2025
 // src/components/Dashboard.js
+// Bu kod, "Uncaught TypeError: l.filter is not a function" hatasını giderir.
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Axios'u dahil ediyoruz
-import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService'; // IndexedDB servisinden çekme
-import MessageModal from './MessageModal'; // Mesaj modalını dahil ediyoruz
+import axios from 'axios';
+import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
+import MessageModal from './MessageModal';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
+    // denetimler state'ini boş bir dizi olarak başlatıyoruz
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,12 +20,16 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
             setLoading(true);
             let allDenetimler = [];
 
-            // İnternet bağlantısını kontrol et
             if (navigator.onLine) {
                 try {
-                    // API'dan denetimleri çek
                     const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
-                    allDenetimler = response.data;
+                    // Gelen verinin bir dizi olduğundan emin olmak için kontrol ekliyoruz
+                    if (Array.isArray(response.data)) {
+                        allDenetimler = response.data;
+                    } else {
+                        console.error('API’den gelen veri bir dizi değil:', response.data);
+                        throw new Error('API verisi beklenildiği gibi değil.');
+                    }
                     console.log('Veriler sunucudan çekildi.');
                 } catch (apiError) {
                     console.error('API’den veri çekilirken hata oluştu, IndexedDB’den çekiliyor:', apiError);
@@ -44,10 +50,15 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
                     console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
                 }
             }
-
-            if (allDenetimler) {
+            
+            // Eğer veri bir dizi ise state'i güncelliyoruz
+            if (Array.isArray(allDenetimler)) {
                 setDenetimler(allDenetimler);
+            } else {
+                // Değilse, hatayı önlemek için boş bir dizi atıyoruz
+                setDenetimler([]);
             }
+            
             setLoading(false);
             if(modalMessage) setShowModal(true);
         };
@@ -67,7 +78,8 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     if (loading) return <div>Veriler yükleniyor...</div>;
     if (error) return <div>Hata: {error}</div>;
 
-    // Hatalı denetimleri doğru şekilde filtreliyoruz
+    // hatalıDenetimler'i filtrelerken denetimler dizisinin varlığından emin oluyoruz.
+    // Bu, hata durumunda boş bir dizi kullanılarak TypeError'ı önler.
     const hatalıDenetimler = denetimler.filter(d => d.kontrolListesi && d.kontrolListesi.some(m => m.durum === 'Uygun Değil'));
 
     return (
