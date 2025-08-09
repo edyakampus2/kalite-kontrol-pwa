@@ -1,62 +1,75 @@
 // src/components/Dashboard.js
-// Tarih: 09.08.2025 Saat: 14:20
-// Açıklama: Denetim verilerinin özetini ve istatistiklerini gösterir.
-// Hatalı denetimlerin sayısını ve listesini sunar.
-
+// Tarih: 09.08.2025 Saat: 14:40
+// Açıklama: Denetim istatistiklerini gösteren bileşen.
+// Yenilikler: Denetim verilerini App.js'den prop olarak alır.
 import React from 'react';
 
 const Dashboard = ({ setCurrentView, denetimler }) => {
     // Toplam denetim sayısı
-    const totalDenetimSayisi = denetimler.length;
+    const toplamDenetimSayisi = denetimler.length;
 
-    // Hatalı denetimleri bulan fonksiyon
-    const hatalar = denetimler.filter(denetim =>
-        denetim.kontrolListesi.some(madde => madde.durum === 'Uygun Değil')
-    );
-    const hataliDenetimSayisi = hatalar.length;
+    // Hatalı denetimleri bulma
+    const hataliDenetimler = denetimler
+        .flatMap(denetim =>
+            denetim.maddeler
+                .filter(madde => madde.secim === 'Uygun Değil')
+                .map(madde => ({
+                    denetimId: denetim.id,
+                    tarih: denetim.tarih,
+                    madde: madde.baslik,
+                    not: madde.not,
+                }))
+        )
+        .sort((a, b) => new Date(b.tarih) - new Date(a.tarih)); // Tarihe göre sırala
 
     return (
-        <div className="dashboard p-6 bg-gray-100 rounded-xl shadow-inner">
-            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Dashboard</h2>
+        <div className="p-6 bg-gray-50 min-h-screen">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-white p-6 rounded-xl shadow-md text-center">
-                    <p className="text-sm text-gray-500">Toplam Denetim Sayısı</p>
-                    <p className="text-4xl font-bold text-blue-600">{totalDenetimSayisi}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div className="bg-blue-100 p-6 rounded-lg shadow-md">
+                    <p className="text-lg font-semibold text-blue-800">Toplam Denetim Sayısı</p>
+                    <p className="text-4xl font-bold text-blue-600 mt-2">{toplamDenetimSayisi}</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-md text-center">
-                    <p className="text-sm text-gray-500">Hatalı Denetim Sayısı</p>
-                    <p className="text-4xl font-bold text-red-600">{hataliDenetimSayisi}</p>
+                <div className="bg-red-100 p-6 rounded-lg shadow-md">
+                    <p className="text-lg font-semibold text-red-800">Toplam Hatalı Madde Sayısı</p>
+                    <p className="text-4xl font-bold text-red-600 mt-2">{hataliDenetimler.length}</p>
                 </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow-md">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Son Hatalı Denetimler</h3>
-                {hatalar.length > 0 ? (
-                    <ul className="space-y-2">
-                        {hatalar.slice(0, 5).map(denetim => (
-                            <li key={denetim.id} className="border-b pb-2 last:border-b-0">
-                                <p className="font-medium text-gray-700">
-                                    <span className="text-gray-500 italic text-sm mr-2">Tarih:</span>
-                                    {new Date(denetim.tarih).toLocaleDateString('tr-TR')}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-bold text-gray-800 mb-4">Son Hatalı Denetimler</h3>
+                {hataliDenetimler.length > 0 ? (
+                    <ul className="divide-y divide-gray-200">
+                        {hataliDenetimler.map((item, index) => (
+                            <li key={index} className="py-4">
+                                <p className="font-semibold text-gray-700">
+                                    <span className="text-red-500">Hatalı Madde:</span> {item.madde}
                                 </p>
-                                <p className="text-sm text-red-500 mt-1">
-                                    Hata: {denetim.kontrolListesi.find(m => m.durum === 'Uygun Değil')?.madde}
+                                <p className="text-sm text-gray-500">
+                                    <span className="font-medium">Denetim Tarihi:</span> {item.tarih}
                                 </p>
+                                {item.not && (
+                                    <p className="text-sm text-gray-500 italic">
+                                        <span className="font-medium">Not:</span> {item.not}
+                                    </p>
+                                )}
                             </li>
                         ))}
                     </ul>
                 ) : (
-                    <p className="text-center text-gray-500 italic">Son zamanlarda hatalı denetim bulunmuyor.</p>
+                    <p className="text-gray-500">Tüm denetimler başarıyla tamamlanmıştır.</p>
                 )}
             </div>
-            
-            <button
-                onClick={() => setCurrentView('menu')}
-                className="mt-6 w-full py-3 px-6 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out"
-            >
-                Ana Menüye Dön
-            </button>
+
+            <div className="mt-6">
+                <button
+                    onClick={() => setCurrentView('menu')}
+                    className="px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none"
+                >
+                    Ana Menüye Dön
+                </button>
+            </div>
         </div>
     );
 };

@@ -1,45 +1,40 @@
 // src/components/DenetimListesi.js
-// Tarih: 09.08.2025 Saat: 14:20
-// Açıklama: Kaydedilmiş denetimlerin listesini gösterir.
-// Kullanıcı, bir denetimi seçerek detay ekranına geçebilir.
-
+// Tarih: 09.08.2025 Saat: 14:40
+// Açıklama: Tüm denetimleri listeleyen bileşen.
+// Yenilikler: Denetim verilerini App.js'den prop olarak alır.
 import React from 'react';
 
 const DenetimListesi = ({ setCurrentView, setSelectedDenetim, denetimler }) => {
-    const handleDenetimSelect = (denetim) => {
+    const handleDenetimSecimi = (denetim) => {
         setSelectedDenetim(denetim);
         setCurrentView('denetimDetayi');
     };
 
     return (
-        <div className="denetim-listesi p-6 bg-gray-100 rounded-xl shadow-inner">
-            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Denetim Listesi</h2>
+        <div className="p-6 bg-gray-50 min-h-screen">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Denetim Listesi</h2>
             {denetimler.length > 0 ? (
-                <div className="space-y-4">
-                    {denetimler.map(denetim => (
-                        <div
-                            key={denetim.id}
-                            onClick={() => handleDenetimSelect(denetim)}
-                            className="bg-white p-4 rounded-lg shadow-md hover:bg-gray-50 cursor-pointer transition duration-200 ease-in-out flex justify-between items-center"
-                        >
-                            <span className="font-semibold text-gray-700">
-                                {new Date(denetim.tarih).toLocaleString('tr-TR')}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                                Kayıt ID: {denetim.id.substring(0, 8)}...
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                denetimler.map(denetim => (
+                    <div
+                        key={denetim.id}
+                        onClick={() => handleDenetimSecimi(denetim)}
+                        className="bg-white p-4 mb-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-100 transition-colors"
+                    >
+                        <p className="font-semibold text-lg text-gray-700">Denetim ID: {denetim.id}</p>
+                        <p className="text-sm text-gray-500">Tarih: {denetim.tarih}</p>
+                    </div>
+                ))
             ) : (
-                <p className="text-center text-gray-500 italic">Henüz kaydedilmiş denetim yok.</p>
+                <p className="text-gray-500">Henüz kaydedilmiş denetim bulunmamaktadır.</p>
             )}
-            <button
-                onClick={() => setCurrentView('menu')}
-                className="mt-6 w-full py-3 px-6 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out"
-            >
-                Ana Menüye Dön
-            </button>
+            <div className="mt-6">
+                <button
+                    onClick={() => setCurrentView('menu')}
+                    className="px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none"
+                >
+                    Ana Menüye Dön
+                </button>
+            </div>
         </div>
     );
 };
