@@ -1,151 +1,222 @@
+// src/components/DenetimFormu.js
+// Tarih: 08.08.2025 Saat: 14:00 (Güncellenmiş)
+
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import axios from 'axios';
+import { saveDenetim } from '../services/IndexedDBService';
+import { getFormMaddeleri } from '../data/FormVerileri';
+import MessageModal from './MessageModal';
 
-const DenetimFormu = () => {
-  // Form verilerini tutmak için state hook'u
-  const [formData, setFormData] = useState({
-    denetimTuru: '',
-    denetimYeri: '',
-    denetciAdi: '',
-    denetimTarihi: '',
-    bulgular: '',
-    aciklamalar: '',
-  });
-  
-  // Başarılı kaydetme sonrası mesaj göstermek için state
-  const [successMessage, setSuccessMessage] = useState('');
-  
-  // Hata mesajlarını tutmak için state
-  const [errorMessage, setErrorMessage] = useState('');
+const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
+    // Form verilerini ve durumunu yöneten state'ler
+    const [formData, setFormData] = useState([]);
+    const [konum, setKonum] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
 
-  // Form inputları değiştiğinde state'i güncelleyen fonksiyon
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+    useEffect(() => {
+        // Form maddelerini yükle
+        const maddeler = getFormMaddeleri();
+        setFormData(maddeler);
 
-  // Form submit edildiğinde çalışacak fonksiyon
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+        // Kullanıcının konumunu al
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setKonum({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    console.error("Konum bilgisi alınamadı:", error);
+                }
+            );
+        }
+    }, []);
 
-    // Zorunlu alanların kontrolü
-    if (!formData.denetimTuru || !formData.denetimYeri || !formData.denetciAdi) {
-      setErrorMessage('Lütfen zorunlu alanları doldurun.');
-      return;
-    }
+    // Form maddesi durumunu güncelleyen fonksiyon
+    const handleDurumChange = (maddeId, durum) => {
+        setFormData(prevData =>
+            prevData.map(madde =>
+                madde.id === maddeId ? { ...madde, durum } : madde
+            )
+        );
+    };
 
-    try {
-      // Form verilerini Firestore'a ekliyoruz
-      await addDoc(collection(db, 'denetimler'), {
-        ...formData,
-        createdAt: serverTimestamp(), // Sunucu zaman damgası ekliyoruz
-      });
-      
-      // Başarılı mesajı ayarlayıp formu sıfırlıyoruz
-      setSuccessMessage('Denetim başarıyla kaydedildi!');
-      setErrorMessage('');
-      setFormData({
-        denetimTuru: '',
-        denetimYeri: '',
-        denetciAdi: '',
-        denetimTarihi: '',
-        bulgular: '',
-        aciklamalar: '',
-      });
+    // Not alanını güncelleyen fonksiyon
+    const handleNotChange = (maddeId, not) => {
+        setFormData(prevData =>
+            prevData.map(madde =>
+                madde.id === maddeId ? { ...madde, not } : madde
+            )
+        );
+    };
 
-    } catch (error) {
-      console.error('Denetim kaydedilirken bir hata oluştu:', error);
-      setErrorMessage('Bir hata oluştu, lütfen tekrar deneyin.');
-      setSuccessMessage('');
-    }
-  };
+    // Fotoğrafı güncelleyen fonksiyon (Base64 olarak kaydeder)
+    const handleFotoChange = (maddeId, file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFormData(prevData =>
+                prevData.map(madde =>
+                    madde.id === maddeId ? { ...madde, foto: reader.result } : madde
+                )
+            );
+        };
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    };
 
-  // Başarı mesajını belirli bir süre sonra kaldırmak için useEffect hook'u
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000); // 5 saniye sonra mesajı kaldır
-      return () => clearTimeout(timer); // Komponent unmount olduğunda timer'ı temizle
-    }
-  }, [successMessage]);
+    // Formu gönderen ve kaydeden fonksiyon
+    const handleSubmit = async () => {
+        setLoading(true);
+        const denetim = {
+            tarih: new Date().toISOString(),
+            konum,
+            kontrolListesi: formData.map(({ foto, ...rest }) => ({
+                ...rest,
+                // Fotoğraf verisi varsa Base64 kısmını al
+                foto: foto ? foto.split(',')[1] : null,
+            })),
+        };
 
-  return (
-    <div className="denetim-formu-container">
-      {successMessage && <div className="success-message">{successMessage}</div>}
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
-      
-      <h2>Yeni Denetim Formu</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="denetimTuru">Denetim Türü:</label>
-          <input
-            type="text"
-            id="denetimTuru"
-            name="denetimTuru"
-            value={formData.denetimTuru}
-            onChange={handleChange}
-            required
-          />
+        try {
+            // Önce sunucuya kaydetmeyi dene
+            await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
+            setModalMessage('Denetim başarıyla sunucuya kaydedildi!');
+        } catch (error) {
+            console.error("Denetim sunucuya kaydedilirken hata oluştu, IndexedDB'ye kaydediliyor:", error);
+            try {
+                // Sunucuya kaydedemezse, IndexedDB'ye kaydet
+                await saveDenetim(denetim);
+                setModalMessage('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
+            } catch (indexedDBError) {
+                console.error("Denetim IndexedDB'ye kaydedilirken hata oluştu:", indexedDBError);
+                setModalMessage('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+            }
+        } finally {
+            setLoading(false);
+            setShowModal(true);
+            // Denetim listesinin yenilenmesi için tetikleyiciyi güncelle
+            setRefreshTrigger(prev => !prev);
+        }
+    };
+    
+    // Modal'ı kapatan fonksiyon
+    const closeModal = () => {
+        setShowModal(false);
+        // Modal kapatıldığında ana menüye dön
+        setCurrentView('menu');
+    };
+
+    return (
+        <div className="denetim-formu p-4 bg-gray-100 min-h-screen">
+            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Yeni Denetim Formu</h2>
+            
+            <div className="form-action-buttons flex justify-between mb-6">
+                <button 
+                    onClick={handleSubmit} 
+                    disabled={loading}
+                    className="flex-1 py-3 px-6 mr-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out"
+                >
+                    {loading ? 'Kaydediliyor...' : 'Denetimi Kaydet'}
+                </button>
+                <button 
+                    onClick={() => setCurrentView('menu')} 
+                    disabled={loading}
+                    className="flex-1 py-3 px-6 ml-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-300 ease-in-out"
+                >
+                    Ana Menüye Dön
+                </button>
+            </div>
+            
+            <div className="space-y-4">
+                {formData.map(madde => (
+                    <div key={madde.id} className="kontrol-maddesi bg-white p-4 rounded-xl shadow-md border border-gray-200">
+                        <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-semibold text-lg text-gray-700">{madde.madde}</h4>
+                            <div className="durum-secenekleri flex space-x-4">
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`durum-${madde.id}`}
+                                        value="Uygun"
+                                        checked={madde.durum === 'Uygun'}
+                                        onChange={() => handleDurumChange(madde.id, 'Uygun')}
+                                        className="form-radio h-5 w-5 text-green-600"
+                                    />
+                                    <span className="ml-2 text-gray-700 font-medium">Uygun</span>
+                                </label>
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name={`durum-${madde.id}`}
+                                        value="Uygun Değil"
+                                        checked={madde.durum === 'Uygun Değil'}
+                                        onChange={() => handleDurumChange(madde.id, 'Uygun Değil')}
+                                        className="form-radio h-5 w-5 text-red-600"
+                                    />
+                                    <span className="ml-2 text-gray-700 font-medium">Uygun Değil</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        {madde.durum === 'Uygun Değil' && (
+                            <div className="uygun-degil-detayları mt-4 space-y-3">
+                                <textarea
+                                    placeholder="Not ekle..."
+                                    onChange={e => handleNotChange(madde.id, e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent transition duration-200 ease-in-out"
+                                ></textarea>
+                                <div className="flex items-center space-x-3">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={e => handleFotoChange(madde.id, e.target.files[0])}
+                                        className="block w-full text-sm text-gray-500
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-full file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-red-50 file:text-red-700
+                                                    hover:file:bg-red-100 cursor-pointer"
+                                    />
+                                    {madde.foto && (
+                                        <img 
+                                            src={madde.foto} 
+                                            alt="Kanıt" 
+                                            className="w-20 h-20 object-cover rounded-md shadow-inner border border-gray-300" 
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="form-action-buttons flex justify-between mt-6">
+                <button 
+                    onClick={handleSubmit} 
+                    disabled={loading}
+                    className="flex-1 py-3 px-6 mr-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out"
+                >
+                    {loading ? 'Kaydediliyor...' : 'Denetimi Kaydet'}
+                </button>
+                <button 
+                    onClick={() => setCurrentView('menu')} 
+                    disabled={loading}
+                    className="flex-1 py-3 px-6 ml-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition duration-300 ease-in-out"
+                >
+                    Ana Menüye Dön
+                </button>
+            </div>
+
+            {showModal && <MessageModal message={modalMessage} onClose={closeModal} />}
         </div>
-        <div className="form-group">
-          <label htmlFor="denetimYeri">Denetim Yeri:</label>
-          <input
-            type="text"
-            id="denetimYeri"
-            name="denetimYeri"
-            value={formData.denetimYeri}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="denetciAdi">Denetçi Adı:</label>
-          <input
-            type="text"
-            id="denetciAdi"
-            name="denetciAdi"
-            value={formData.denetciAdi}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="denetimTarihi">Denetim Tarihi:</label>
-          <input
-            type="date"
-            id="denetimTarihi"
-            name="denetimTarihi"
-            value={formData.denetimTarihi}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="bulgular">Bulgular:</label>
-          <textarea
-            id="bulgular"
-            name="bulgular"
-            value={formData.bulgular}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="aciklamalar">Açıklamalar:</label>
-          <textarea
-            id="aciklamalar"
-            name="aciklamalar"
-            value={formData.aciklamalar}
-            onChange={handleChange}
-          />
-        </div>
-        <button type="submit" className="submit-button">Kaydet</button>
-      </form>
-    </div>
-  );
+    );
 };
 
 export default DenetimFormu;
