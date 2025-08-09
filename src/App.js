@@ -1,5 +1,5 @@
-// Tarih: 2025-08-08
-// Kod Grup Açıklaması: Ana Uygulama Yapısı
+// Tarih: 2025-08-09 15:00:56
+// Kod Grup Açıklaması: App.js dosyasındaki kullanılmayan setRefreshTrigger değişkeninin kaldırılması.
 import React, { useState } from 'react';
 import Menu from './components/Menu';
 import DenetimFormu from './components/DenetimFormu';
@@ -10,7 +10,7 @@ import Dashboard from './components/Dashboard';
 export default function App() {
     const [currentView, setCurrentView] = useState('menu');
     const [selectedDenetim, setSelectedDenetim] = useState(null);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [refreshTrigger] = useState(0); // Düzeltildi: 'setRefreshTrigger' kaldırıldı
 
     const renderView = () => {
         switch (currentView) {
