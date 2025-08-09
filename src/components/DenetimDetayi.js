@@ -1,43 +1,33 @@
-src/components/DenetimDetayi.js
-// Tarih: 08.08.2025 Saat: 13:30
-// src/components/DenetimDetayi.js
-
 import React from 'react';
-// Hata veren MessageModal import satırı kaldırıldı.
 
-const DenetimDetayi = ({ setCurrentView, selectedDenetim }) => {
+const DenetimDetayi = ({ selectedDenetim, setCurrentView }) => {
     if (!selectedDenetim) {
-        return (
-            <div className="denetim-detayi">
-                <p>Detayları görüntülenecek denetim bulunamadı.</p>
-                <div className="form-action-buttons">
-                    <button onClick={() => setCurrentView('dashboard')}>Dashboard'a Dön</button>
-                </div>
-            </div>
-        );
+        return <div>Denetim detayları bulunamadı.</div>;
     }
 
     return (
-        <div className="denetim-detayi">
-            <h2>Denetim Detayı</h2>
-            <p><strong>Tarih:</strong> {new Date(selectedDenetim.tarih).toLocaleString()}</p>
-            <p><strong>Konum:</strong> Lat: {selectedDenetim.konum.latitude}, Lon: {selectedDenetim.konum.longitude}</p>
-
+        <div className="denetim-detay">
+            <h2>Denetim Detayları</h2>
+            <p>Tarih: {new Date(selectedDenetim.tarih).toLocaleString()}</p>
+            {selectedDenetim.konum && (
+                <p>Konum: Lat: {selectedDenetim.konum.latitude}, Lon: {selectedDenetim.konum.longitude}</p>
+            )}
             <h3>Kontrol Maddeleri</h3>
             <ul>
                 {selectedDenetim.formData.map(madde => (
                     <li key={madde.id}>
-                        <h4>{madde.metin}</h4>
-                        <p><strong>Durum:</strong> {madde.durum}</p>
-                        {madde.not && <p><strong>Not:</strong> {madde.not}</p>}
-                        {madde.foto && <img src={madde.foto} alt="Kanıt" style={{ maxWidth: '200px' }} />}
+                        <h4>{madde.madde}</h4>
+                        <p>Durum: {madde.durum}</p>
+                        {madde.durum === 'Uygun Değil' && (
+                            <>
+                                <p>Not: {madde.not}</p>
+                                {madde.foto && <img src={madde.foto} alt="Hata Kanıtı" />}
+                            </>
+                        )}
                     </li>
                 ))}
             </ul>
-
-            <div className="form-action-buttons">
-                <button onClick={() => setCurrentView('dashboard')}>Dashboard'a Dön</button>
-            </div>
+            <button onClick={() => setCurrentView('list')}>Listeye Geri Dön</button>
         </div>
     );
 };

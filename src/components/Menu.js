@@ -1,19 +1,19 @@
-src/components/Menu.js
-// Tarih: 08.08.2025 Saat: 13:30
-// src/components/Menu.js
-
 import React from 'react';
+import MessageModal from './MessageModal';
 
 const Menu = ({ setCurrentView }) => {
-  return (
-    <div className="menu">
-      <h2>Ana Menü</h2>
-      <button onClick={() => setCurrentView('form')}>Yeni Denetim Başlat</button>
-      <button onClick={() => setCurrentView('list')}>Denetimlerim</button>
-      <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
-      <button onClick={() => setCurrentView('yedekleme')}>Yedekleme ve Geri Yükleme</button>
-    </div>
-  );
+    return (
+        <div className="menu">
+            <h1>Kalite Kontrol PWA</h1>
+            <p>Hoşgeldiniz!</p>
+            <nav>
+                <button onClick={() => setCurrentView('form')}>Yeni Denetim Başlat</button>
+                <button onClick={() => setCurrentView('list')}>Denetimleri Görüntüle</button>
+                <button onClick={() => setCurrentView('dashboard')}>Dashboard</button>
+                <button onClick={() => setCurrentView('yedekleme')}>Yedekleme ve Geri Yükleme</button>
+            </nav>
+        </div>
+    );
 };
 
 export default Menu;

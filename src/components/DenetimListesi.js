@@ -1,11 +1,9 @@
-// Tarih: 2025-08-09 Saat: 17:40
-// Kod Grup Açıklaması: DenetimListesi.js dosyasındaki kullanılmayan setModalMessage değişkeninin kaldırılması.
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 import MessageModal from './MessageModal';
 
-const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
+const DenetimListesi = ({ setCurrentView, refreshTrigger, setSelectedDenetim }) => {
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,7 +16,6 @@ const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
             try {
                 const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
                 setDenetimler(response.data.data);
-                setLoading(false);
             } catch (err) {
                 console.error("Denetimler sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
                 try {
@@ -28,6 +25,7 @@ const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
                     console.error("IndexedDB'den denetimler getirilirken hata oluştu:", indexedDBError);
                     setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
                 }
+            } finally {
                 setLoading(false);
             }
         };
@@ -47,13 +45,18 @@ const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
         return <div className="denetim-listesi">{error}</div>;
     }
 
+    const handleDenetimClick = (denetim) => {
+        setSelectedDenetim(denetim);
+        setCurrentView('denetimDetayi');
+    };
+
     return (
         <div className="denetim-listesi">
             <h2>Kaydedilmiş Denetimlerim</h2>
             {denetimler.length > 0 ? (
                 <ul>
                     {denetimler.map(denetim => (
-                        <li key={denetim._id || denetim.id}>
+                        <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
                             <p>Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}</p>
                             <p>Konum: Lat: {denetim.konum?.latitude || 'N/A'}, Lon: {denetim.konum?.longitude || 'N/A'}</p>
                         </li>

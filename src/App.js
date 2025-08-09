@@ -1,6 +1,3 @@
-// Tarih: 2025-08-09 Saat: 17:30
-// Kod Grup Açıklaması: App.js dosyasındaki kullanılmayan setRefreshTrigger değişkeninin kaldırılması ve kodun genel kontrolü.
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -57,7 +54,7 @@ const App = () => {
       window.removeEventListener('online', syncOfflineData);
       window.removeEventListener('offline', () => {});
     };
-  }, [currentView]);
+  }, [currentView, setRefreshTrigger]);
 
   const closeModal = () => {
     setShowModal(false);
@@ -70,7 +67,7 @@ const App = () => {
       case 'form':
         return <DenetimFormu setCurrentView={setCurrentView} setRefreshTrigger={setRefreshTrigger} />;
       case 'list':
-        return <DenetimListesi setCurrentView={setCurrentView} refreshTrigger={refreshTrigger} />;
+        return <DenetimListesi setCurrentView={setCurrentView} refreshTrigger={refreshTrigger} setSelectedDenetim={setSelectedDenetim} />;
       case 'dashboard':
         return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
       case 'denetimDetayi':

@@ -1,7 +1,3 @@
-src/services/IndexedDBService.js
-// Tarih: 08.08.2025 Saat: 13:30
-// src/services/IndexedDBService.js
-
 const DB_NAME = 'KaliteKontrolDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'denetimler';
@@ -18,6 +14,7 @@ const openDB = () => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = (event) => {
+            console.error('Database error: ' + event.target.errorCode);
             reject('Database error: ' + event.target.errorCode);
         };
 
@@ -47,6 +44,7 @@ export const saveDenetim = async (denetim) => {
         };
 
         request.onerror = (event) => {
+            console.error('Save error: ' + event.target.errorCode);
             reject('Save error: ' + event.target.errorCode);
         };
     });
@@ -64,6 +62,7 @@ export const getDenetimler = async () => {
         };
 
         request.onerror = (event) => {
+            console.error('Get error: ' + event.target.errorCode);
             reject('Get error: ' + event.target.errorCode);
         };
     });
@@ -81,6 +80,7 @@ export const clearDenetimler = async () => {
         };
 
         request.onerror = (event) => {
+            console.error('Clear error: ' + event.target.errorCode);
             reject('Clear error: ' + event.target.errorCode);
         };
     });

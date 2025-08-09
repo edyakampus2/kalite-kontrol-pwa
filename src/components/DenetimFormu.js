@@ -1,6 +1,3 @@
-// Tarih: 2025-08-09 Saat: 17:35
-// Kod Grup Açıklaması: DenetimFormu bileşeninin yeni gereksinimlere göre güncellenmiş hali.
-// Bu güncelleme ile kontrol maddeleri harici bir dosyadan (FormVerileri.js) alınıyor ve her madde için fotoğraf ekleme işlevi ekleniyor.
 import React, { useState, useEffect } from 'react';
 import { saveDenetim } from '../services/IndexedDBService';
 import { getFormMaddeleri } from '../data/FormVerileri';
