@@ -1,106 +1,62 @@
-// Tarih: 08.08.2025
 // src/components/Dashboard.js
+// Tarih: 09.08.2025 Saat: 14:20
+// Açıklama: Denetim verilerinin özetini ve istatistiklerini gösterir.
+// Hatalı denetimlerin sayısını ve listesini sunar.
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
-import MessageModal from './MessageModal';
+import React from 'react';
 
-const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
-    // denetimler state'ini boş bir dizi olarak başlatıyoruz
-    const [denetimler, setDenetimler] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
+const Dashboard = ({ setCurrentView, denetimler }) => {
+    // Toplam denetim sayısı
+    const totalDenetimSayisi = denetimler.length;
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            setLoading(true);
-            let allDenetimler = [];
-
-            if (navigator.onLine) {
-                try {
-                    const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
-                    // API'den gelen veriyi doğru şekilde (response.data.data) alıyoruz
-                    if (response.data && Array.isArray(response.data.data)) {
-                        allDenetimler = response.data.data;
-                    } else {
-                        console.error('API’den gelen veri beklenildiği gibi değil:', response.data);
-                        throw new Error('API verisi beklenildiği gibi değil.');
-                    }
-                    console.log('Veriler sunucudan çekildi.');
-                } catch (apiError) {
-                    console.error('API’den veri çekilirken hata oluştu, IndexedDB’den çekiliyor:', apiError);
-                    try {
-                        allDenetimler = await getDenetimlerFromIndexedDB();
-                        setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
-                    } catch (dbError) {
-                        setError('Hata: Veriler yerel depodan da alınamadı. Lütfen daha sonra tekrar deneyin.');
-                        console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
-                    }
-                }
-            } else {
-                try {
-                    allDenetimler = await getDenetimlerFromIndexedDB();
-                    setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
-                } catch (dbError) {
-                    setError('Hata: Çevrimdışı modda veriler yerel depodan alınamadı. Lütfen daha sonra tekrar deneyin.');
-                    console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
-                }
-            }
-
-            if (Array.isArray(allDenetimler)) {
-                setDenetimler(allDenetimler);
-            } else {
-                setDenetimler([]);
-            }
-
-            setLoading(false);
-            if(modalMessage) setShowModal(true);
-        };
-
-        fetchDashboardData();
-    }, [refreshTrigger, modalMessage]);
-
-    const handleDenetimClick = (denetim) => {
-        setSelectedDenetim(denetim);
-        setCurrentView('denetimDetayi');
-    };
-
-    const closeModalAndNavigate = () => {
-        setShowModal(false);
-    };
-
-    if (loading) return <div>Veriler yükleniyor...</div>;
-    if (error) return <div>Hata: {error}</div>;
-
-    const hatalıDenetimler = denetimler.filter(d => d.formData && d.formData.some(m => m.durum === 'Uygun Değil'));
+    // Hatalı denetimleri bulan fonksiyon
+    const hatalar = denetimler.filter(denetim =>
+        denetim.kontrolListesi.some(madde => madde.durum === 'Uygun Değil')
+    );
+    const hataliDenetimSayisi = hatalar.length;
 
     return (
-        <div className="dashboard-container">
-            <h2>Genel Denetim Özeti</h2>
-            <p>Toplam Yapılan Denetim Sayısı: <strong>{denetimler.length}</strong></p>
-
-            <h3>Hatalı Denetimler</h3>
-            {hatalıDenetimler.length > 0 ? (
-                <ol>
-                    {hatalıDenetimler.map((denetim, index) => (
-                        <li key={denetim._id || denetim.id} onClick={() => handleDenetimClick(denetim)}>
-                            ({index + 1}) Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}
-                        </li>
-                    ))}
-                </ol>
-            ) : (
-                <p>Harika! Henüz hatalı denetim bulunmuyor.</p>
-            )}
-
-            <div className="form-action-buttons">
-                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
+        <div className="dashboard p-6 bg-gray-100 rounded-xl shadow-inner">
+            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Dashboard</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white p-6 rounded-xl shadow-md text-center">
+                    <p className="text-sm text-gray-500">Toplam Denetim Sayısı</p>
+                    <p className="text-4xl font-bold text-blue-600">{totalDenetimSayisi}</p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-md text-center">
+                    <p className="text-sm text-gray-500">Hatalı Denetim Sayısı</p>
+                    <p className="text-4xl font-bold text-red-600">{hataliDenetimSayisi}</p>
+                </div>
             </div>
-            {showModal && (
-                <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
-            )}
+
+            <div className="bg-white p-4 rounded-xl shadow-md">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Son Hatalı Denetimler</h3>
+                {hatalar.length > 0 ? (
+                    <ul className="space-y-2">
+                        {hatalar.slice(0, 5).map(denetim => (
+                            <li key={denetim.id} className="border-b pb-2 last:border-b-0">
+                                <p className="font-medium text-gray-700">
+                                    <span className="text-gray-500 italic text-sm mr-2">Tarih:</span>
+                                    {new Date(denetim.tarih).toLocaleDateString('tr-TR')}
+                                </p>
+                                <p className="text-sm text-red-500 mt-1">
+                                    Hata: {denetim.kontrolListesi.find(m => m.durum === 'Uygun Değil')?.madde}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-center text-gray-500 italic">Son zamanlarda hatalı denetim bulunmuyor.</p>
+                )}
+            </div>
+            
+            <button
+                onClick={() => setCurrentView('menu')}
+                className="mt-6 w-full py-3 px-6 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out"
+            >
+                Ana Menüye Dön
+            </button>
         </div>
     );
 };
