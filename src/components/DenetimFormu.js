@@ -1,5 +1,5 @@
 // src/components/DenetimFormu.js
-// Tarih: 09.08.2025 Saat: 13:30 (Düzeltme)
+// Tarih: 09.08.2025 Saat: 13:45 (Geliştirilmiş)
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -100,16 +100,17 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
             setLoading(false);
             // Modal'ın görünürlüğünü ayarla
             setShowModal(true);
-            // Denetim listesinin yenilenmesi için tetikleyiciyi güncelle
-            setRefreshTrigger(prev => !prev);
+            // setRefreshTrigger'ı buradan kaldırdık, modal kapatıldığında çağırılacak.
         }
     };
     
     // Modal'ı kapatan fonksiyon
     const closeModal = () => {
         setShowModal(false);
-        // Modal kapatıldığında ana menüye dön
+        // Modal kapatıldığında hem ana menüye dön hem de listeyi yenile
         setCurrentView('menu');
+        // setRefreshTrigger'ı buraya taşıdık ki, liste yenileme işlemi modal kapandıktan sonra olsun.
+        setRefreshTrigger(prev => !prev);
     };
 
     return (
@@ -215,8 +216,8 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
                 </button>
             </div>
 
-            {/* Modal bileşeninin görünürlüğü 'showModal' state'ine bağlı olarak kontrol edilir. */}
-            {showModal && <MessageModal message={modalMessage} onClose={closeModal} />}
+            {/* Modal'ın görünürlüğünü 'show' prop'u ile doğru bir şekilde iletiyoruz */}
+            {showModal && <MessageModal show={showModal} message={modalMessage} onClose={closeModal} />}
         </div>
     );
 };
