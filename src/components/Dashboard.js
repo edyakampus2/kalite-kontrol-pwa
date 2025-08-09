@@ -1,7 +1,7 @@
-// Tarih: 2025-08-08
-// Kod Grup Açıklaması: Dashboard Bileşeni
+// Tarih: 2025-08-09 14:56:44
+// Kod Grup Açıklaması: Dashboard Bileşeninin Mesaj Modalı import yolu düzeltmesi
 import React, { useState, useEffect } from 'react';
-import MessageModal from '../services/MessageModal';
+import MessageModal from './MessageModal'; // Düzeltildi: 'MessageModal.js' dosyasının yolu güncellendi.
 import { getDenetimler } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
@@ -89,7 +89,6 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     if (error) return <div>Hata: {error}</div>;
 
     const hatalıDenetimler = denetimler.filter(d => d.formData && d.formData.some(m => m.durum === 'Uygun Değil'));
-
     return (
         <div className="dashboard-container">
             <h2>Genel Denetim Özeti</h2>

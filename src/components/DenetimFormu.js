@@ -1,7 +1,7 @@
-// Tarih: 2025-08-08
-// Kod Grup Açıklaması: Yeni Denetim Formu
+// Tarih: 2025-08-09 14:56:44
+// Kod Grup Açıklaması: Denetim Formu Bileşeninin Mesaj Modalı import yolu düzeltmesi
 import React, { useState } from 'react';
-import MessageModal from '../services/MessageModal';
+import MessageModal from './MessageModal'; // Düzeltildi: 'MessageModal.js' dosyasının yolu güncellendi.
 
 const DenetimFormu = ({ setCurrentView }) => {
     // Kontrol listesi için örnek veri
@@ -11,7 +11,6 @@ const DenetimFormu = ({ setCurrentView }) => {
         { metin: "Güvenlik önlemleri alındı mı?", durum: null, not: "" },
         { metin: "Kalite standartları karşılanıyor mu?", durum: null, not: "" },
     ];
-    
     const [kontrolListesi, setKontrolListesi] = useState(initialKontrolListesi);
     const [message, setMessage] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -40,7 +39,6 @@ const DenetimFormu = ({ setCurrentView }) => {
         setMessage('Denetim başarıyla kaydedildi!');
         setShowModal(true);
     };
-
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4 font-inter">
             <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-xl">
@@ -102,14 +100,14 @@ const DenetimFormu = ({ setCurrentView }) => {
                 </div>
             </div>
             {showModal && (
-                <MessageModal 
-                    message={message} 
+                <MessageModal
+                    message={message}
                     onClose={() => {
                         setShowModal(false);
                         if (message === 'Denetim başarıyla kaydedildi!') {
                             setCurrentView('menu');
                         }
-                    }} 
+                    }}
                 />
             )}
         </div>
