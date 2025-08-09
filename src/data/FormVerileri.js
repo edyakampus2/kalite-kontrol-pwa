@@ -1,42 +1,48 @@
+src/data/FormVerileri.js
+// Tarih: 08.08.2025 Saat: 13:30
 // src/data/FormVerileri.js
-// Tarih: 09.08.2025 Saat: 14:20
-// Açıklama: Denetim formu için kullanılan kontrol maddelerini içerir.
-// Bu veriler, uygulamanın dinamik olarak form oluşturmasını sağlar.
 
 export const getFormMaddeleri = () => [
     {
         id: 1,
-        madde: "Ürün ambalajı sağlam ve hasarsız olmalı.",
+        metin: "Ürünün ambalajı sağlam ve hasarsız olmalıdır.",
         durum: null,
         not: "",
-        foto: null,
+        foto: null
     },
     {
         id: 2,
-        madde: "Etiket bilgileri eksiksiz ve okunabilir olmalı.",
+        metin: "Son kullanma tarihi okunabilir ve geçerli olmalıdır.",
         durum: null,
         not: "",
-        foto: null,
+        foto: null
     },
     {
         id: 3,
-        madde: "Son kullanma tarihi kontrol edilmeli.",
+        metin: "Ürünün etiketi doğru ve eksiksiz olmalıdır.",
         durum: null,
         not: "",
-        foto: null,
+        foto: null
     },
     {
         id: 4,
-        madde: "Ürün içeriği, etikette belirtilenle aynı olmalı.",
+        metin: "Ürün, belirtilen renk ve boyutlarda olmalıdır.",
         durum: null,
         not: "",
-        foto: null,
+        foto: null
     },
     {
         id: 5,
-        madde: "Depolama koşulları uygun olmalı.",
+        metin: "Üründe gözle görülür bir leke veya çizik bulunmamalıdır.",
         durum: null,
         not: "",
-        foto: null,
+        foto: null
     },
+    {
+        id: 6,
+        metin: "Ürün doğru şekilde paketlenmiş olmalıdır.",
+        durum: null,
+        not: "",
+        foto: null
+    }
 ];

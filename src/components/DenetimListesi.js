@@ -1,61 +1,73 @@
-// Tarih: 2025-08-08
-// Kod Grup Açıklaması: Denetim Listesi Bileşeni
+// Tarih: 2025-08-09 Saat: 17:40
+// Kod Grup Açıklaması: DenetimListesi.js dosyasındaki kullanılmayan setModalMessage değişkeninin kaldırılması.
 import React, { useState, useEffect } from 'react';
-import { getDenetimler } from '../services/IndexedDBService';
+import axios from 'axios';
+import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
+import MessageModal from './MessageModal';
 
-const DenetimListesi = ({ setCurrentView, setSelectedDenetim }) => {
+const DenetimListesi = ({ setCurrentView, refreshTrigger }) => {
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage] = useState('');
 
     useEffect(() => {
         const fetchDenetimler = async () => {
+            setLoading(true);
             try {
-                const data = await getDenetimler();
-                setDenetimler(data);
-            } catch (error) {
-                console.error("Denetimler alınamadı:", error);
-            } finally {
+                const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/denetimler');
+                setDenetimler(response.data.data);
+                setLoading(false);
+            } catch (err) {
+                console.error("Denetimler sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
+                try {
+                    const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
+                    setDenetimler(indexedDBDenetimler);
+                } catch (indexedDBError) {
+                    console.error("IndexedDB'den denetimler getirilirken hata oluştu:", indexedDBError);
+                    setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
+                }
                 setLoading(false);
             }
         };
 
         fetchDenetimler();
-    }, []);
+    }, [refreshTrigger]);
 
-    const handleDenetimClick = (denetim) => {
-        setSelectedDenetim(denetim);
-        setCurrentView('denetimDetayi');
+    const closeModalAndNavigate = () => {
+        setShowModal(false);
     };
 
-    if (loading) return <div>Yükleniyor...</div>;
+    if (loading) {
+        return <div className="denetim-listesi">Veriler yükleniyor...</div>;
+    }
+
+    if (error) {
+        return <div className="denetim-listesi">{error}</div>;
+    }
 
     return (
-        <div className="denetim-listesi p-4 sm:p-6 bg-gray-100 min-h-screen rounded-lg shadow-md">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Denetim Listesi</h2>
+        <div className="denetim-listesi">
+            <h2>Kaydedilmiş Denetimlerim</h2>
             {denetimler.length > 0 ? (
-                <ul className="space-y-4">
-                    {denetimler.map((denetim) => (
-                        <li 
-                            key={denetim.id} 
-                            onClick={() => handleDenetimClick(denetim)}
-                            className="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-50 transition duration-200"
-                        >
-                            <p className="text-lg font-semibold text-gray-800">Denetim ID: {denetim.id}</p>
-                            <p className="text-gray-600">Tarih: {new Date(denetim.tarih).toLocaleString()}</p>
+                <ul>
+                    {denetimler.map(denetim => (
+                        <li key={denetim._id || denetim.id}>
+                            <p>Tarih: {denetim.tarih ? new Date(denetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}</p>
+                            <p>Konum: Lat: {denetim.konum?.latitude || 'N/A'}, Lon: {denetim.konum?.longitude || 'N/A'}</p>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p className="text-center text-gray-500 p-4 bg-white rounded-lg shadow-md">Henüz denetim bulunmamaktadır.</p>
+                <p>Henüz kaydedilmiş denetim bulunmuyor.</p>
             )}
-            <div className="mt-8 flex justify-center">
-                <button 
-                    onClick={() => setCurrentView('menu')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
-                >
-                    Ana Menüye Dön
-                </button>
+            <div className="form-action-buttons">
+                <button onClick={() => setCurrentView('menu')}>Ana Menüye Dön</button>
             </div>
+            {showModal && (
+                <MessageModal message={modalMessage} onClose={closeModalAndNavigate} />
+            )}
         </div>
     );
 };

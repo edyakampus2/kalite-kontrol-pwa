@@ -1,40 +1,72 @@
-// Tarih: 2025-08-09 17:15:00
-// Kod Grup Açıklaması: Dashboard bileşenindeki kullanılmayan setModalMessage değişkeninin kaldırılması.
+// Tarih: 2025-08-09 Saat: 17:45
+// Kod Grup Açıklaması: Dashboard bileşenindeki kullanılmayan setModalMessage değişkeninin kaldırılması ve veri uyumsuzluğunun giderilmesi.
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { getDenetimler as getDenetimlerFromIndexedDB } from '../services/IndexedDBService';
 import MessageModal from './MessageModal';
-import { getDenetimler } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
+    const [dashboardData, setDashboardData] = useState(null);
     const [denetimler, setDenetimler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [modalMessage] = useState(''); // Düzeltildi: 'setModalMessage' kaldırıldı
+    const [modalMessage] = useState('');
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // Tarih: 2025-08-09 17:15:00
-                // Kod Grup Açıklaması: Sabit kodlanmış veriler yerine IndexedDB'den tüm denetimleri çekme.
-                const allDenetimler = await getDenetimler();
-                
-                if (Array.isArray(allDenetimler)) {
-                    setDenetimler(allDenetimler);
-                } else {
-                    setDenetimler([]);
-                }
-            } catch (dbError) {
-                setError('Hata: Veriler yerel depodan da alınamadı. Lütfen daha sonra tekrar deneyin.');
-                console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
-            } finally {
+                const response = await axios.get('https://kalite-kontrol-api.onrender.com/api/dashboard');
+                setDashboardData(response.data.ozet);
+                setDenetimler(response.data.data);
                 setLoading(false);
-                if (modalMessage) setShowModal(true);
+            } catch (err) {
+                console.error("Dashboard verileri sunucudan getirilirken hata oluştu, IndexedDB'den çekiliyor:", err);
+                try {
+                    const indexedDBDenetimler = await getDenetimlerFromIndexedDB();
+                    const ozet = {
+                        toplamDenetim: indexedDBDenetimler.length,
+                        hataSayilari: {},
+                        hataFotograflari: []
+                    };
+
+                    indexedDBDenetimler.forEach(denetim => {
+                        denetim.formData.forEach(madde => {
+                            if (madde.durum === 'Uygun Değil') {
+                                if (ozet.hataSayilari[madde.madde]) {
+                                    ozet.hataSayilari[madde.madde]++;
+                                } else {
+                                    ozet.hataSayilari[madde.madde] = 1;
+                                }
+                                if (madde.foto) {
+                                    ozet.hataFotograflari.push({
+                                        madde: madde.madde,
+                                        not: madde.not,
+                                        foto: madde.foto,
+                                        tarih: denetim.tarih
+                                    });
+                                }
+                            }
+                        });
+                    });
+
+                    setDashboardData(ozet);
+                    setDenetimler(indexedDBDenetimler);
+                    
+                    // Daha önce burada bir modal mesajı oluşturuluyordu.
+                    // Şimdi sadece hata durumunda modal gösterilecek.
+                    
+                } catch (indexedDBError) {
+                    console.error("IndexedDB'den dashboard verileri getirilirken hata oluştu:", indexedDBError);
+                    setError('Veriler getirilemedi. Lütfen daha sonra tekrar deneyin.');
+                }
+                setLoading(false);
             }
         };
 
         fetchDashboardData();
-    }, [refreshTrigger, modalMessage]);
+    }, [refreshTrigger]);
 
     const handleDenetimClick = (denetim) => {
         setSelectedDenetim(denetim);
@@ -47,6 +79,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
 
     if (loading) return <div>Veriler yükleniyor...</div>;
     if (error) return <div>Hata: {error}</div>;
+    if (!dashboardData) return <div>Veri bulunamadı.</div>;
 
     const hatalıDenetimler = denetimler.filter(d => d.formData && d.formData.some(m => m.durum === 'Uygun Değil'));
 

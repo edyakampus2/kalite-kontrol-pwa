@@ -1,4 +1,5 @@
-// Tarih: 08.08.2025 Saat: 13:15
+src/components/Yedekleme.js
+// Tarih: 08.08.2025 Saat: 13:30
 // src/components/Yedekleme.js
 
 import React, { useState } from 'react';
@@ -6,7 +7,6 @@ import { getDenetimler as getDenetimlerFromIndexedDB, clearDenetimler as clearDe
 import MessageModal from './MessageModal';
 
 const Yedekleme = ({ setCurrentView }) => {
-    // Bileşen içindeki yetkilendirme durumu
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -14,7 +14,6 @@ const Yedekleme = ({ setCurrentView }) => {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
 
-    // Yedekleme işlemini yapan fonksiyon
     const handleYedekAl = async () => {
         setLoading(true);
         try {
@@ -38,7 +37,6 @@ const Yedekleme = ({ setCurrentView }) => {
         setLoading(false);
     };
 
-    // Geri yükleme işlemini yapan fonksiyon
     const handleYedektenDon = async (event) => {
         const file = event.target.files[0];
         if (!file) {
@@ -50,7 +48,6 @@ const Yedekleme = ({ setCurrentView }) => {
         reader.onload = async (e) => {
             try {
                 const denetimler = JSON.parse(e.target.result);
-                // Mevcut verileri temizleme (isteğe bağlı, kullanıcıya sorulabilir)
                 await clearDenetimlerInIndexedDB();
                 for (const denetim of denetimler) {
                     await saveDenetim(denetim);
@@ -67,10 +64,8 @@ const Yedekleme = ({ setCurrentView }) => {
         reader.readAsText(file);
     };
 
-    // Giriş işlemini kontrol eden fonksiyon
     const handleLogin = (e) => {
         e.preventDefault();
-        // Basit bir doğrulama. Gerçek bir uygulamada bu bir API çağrısı olmalı.
         if (username === 'admin' && password === '12345') {
             setIsAuthorized(true);
             setModalMessage("Giriş başarılı!");
@@ -91,7 +86,6 @@ const Yedekleme = ({ setCurrentView }) => {
             {loading && <p>İşlem devam ediyor...</p>}
             
             {isAuthorized ? (
-                // Eğer yetkili ise yedekleme butonlarını göster
                 <>
                     <button
                         onClick={handleYedekAl}
@@ -105,7 +99,6 @@ const Yedekleme = ({ setCurrentView }) => {
                     </label>
                 </>
             ) : (
-                // Yetkili değilse giriş formunu göster
                 <form onSubmit={handleLogin} className="flex flex-col space-y-4 w-64">
                     <input
                         type="text"

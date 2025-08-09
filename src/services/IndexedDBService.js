@@ -1,6 +1,6 @@
-// Tarih: 2025-08-09 17:05:00
-// Kod Grup Açıklaması: Mevcut IndexedDBService.js dosyasının revizyonu.
-// İnternet bağlantısı olmasa bile denetimlerin yerel olarak kaydedilmesi ve çekilmesini sağlar.
+src/services/IndexedDBService.js
+// Tarih: 08.08.2025 Saat: 13:30
+// src/services/IndexedDBService.js
 
 const DB_NAME = 'KaliteKontrolDB';
 const DB_VERSION = 1;
@@ -8,8 +8,6 @@ const STORE_NAME = 'denetimler';
 
 let db = null;
 
-// Tarih: 2025-08-09 17:05:00
-// Kod Grup Açıklaması: IndexedDB veritabanı bağlantısını açar veya mevcut bağlantıyı kullanır.
 const openDB = () => {
     return new Promise((resolve, reject) => {
         if (db) {
@@ -20,7 +18,6 @@ const openDB = () => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = (event) => {
-            console.error('Database error: ' + event.target.errorCode);
             reject('Database error: ' + event.target.errorCode);
         };
 
@@ -38,8 +35,6 @@ const openDB = () => {
     });
 };
 
-// Tarih: 2025-08-09 17:05:00
-// Kod Grup Açıklaması: Yeni bir denetim kaydını IndexedDB'ye ekler.
 export const saveDenetim = async (denetim) => {
     const database = await openDB();
     return new Promise((resolve, reject) => {
@@ -52,14 +47,11 @@ export const saveDenetim = async (denetim) => {
         };
 
         request.onerror = (event) => {
-            console.error('Save error: ' + event.target.errorCode);
             reject('Save error: ' + event.target.errorCode);
         };
     });
 };
 
-// Tarih: 2025-08-09 17:05:00
-// Kod Grup Açıklaması: IndexedDB'deki tüm denetim kayıtlarını çeker.
 export const getDenetimler = async () => {
     const database = await openDB();
     return new Promise((resolve, reject) => {
@@ -72,14 +64,11 @@ export const getDenetimler = async () => {
         };
 
         request.onerror = (event) => {
-            console.error('Get error: ' + event.target.errorCode);
             reject('Get error: ' + event.target.errorCode);
         };
     });
 };
 
-// Tarih: 2025-08-09 17:05:00
-// Kod Grup Açıklaması: IndexedDB'deki tüm kayıtları temizler.
 export const clearDenetimler = async () => {
     const database = await openDB();
     return new Promise((resolve, reject) => {
@@ -92,7 +81,6 @@ export const clearDenetimler = async () => {
         };
 
         request.onerror = (event) => {
-            console.error('Clear error: ' + event.target.errorCode);
             reject('Clear error: ' + event.target.errorCode);
         };
     });
