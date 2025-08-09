@@ -1,5 +1,7 @@
+// Tarih: 2025-08-09 Saat: 17:45
+// Kod Grup Açıklaması: Yedekleme bileşenine saveDenetim fonksiyonunun import edilmesi.
 import React, { useState } from 'react';
-import { getDenetimler, clearDenetimler } from '../services/IndexedDBService';
+import { getDenetimler, clearDenetimler, saveDenetim } from '../services/IndexedDBService';
 import MessageModal from './MessageModal';
 
 const Yedekleme = ({ setCurrentView }) => {
