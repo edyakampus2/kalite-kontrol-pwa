@@ -1,5 +1,5 @@
 // src/components/DenetimFormu.js
-// Tarih: 08.08.2025 Saat: 14:00 (Güncellenmiş)
+// Tarih: 09.08.2025 Saat: 13:30 (Düzeltme)
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -98,6 +98,7 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
             }
         } finally {
             setLoading(false);
+            // Modal'ın görünürlüğünü ayarla
             setShowModal(true);
             // Denetim listesinin yenilenmesi için tetikleyiciyi güncelle
             setRefreshTrigger(prev => !prev);
@@ -214,6 +215,7 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
                 </button>
             </div>
 
+            {/* Modal bileşeninin görünürlüğü 'showModal' state'ine bağlı olarak kontrol edilir. */}
             {showModal && <MessageModal message={modalMessage} onClose={closeModal} />}
         </div>
     );
