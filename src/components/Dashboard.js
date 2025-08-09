@@ -1,5 +1,5 @@
-// Tarih: 2025-08-09 14:56:44
-// Kod Grup Açıklaması: Dashboard Bileşeninin Mesaj Modalı import yolu düzeltmesi
+// Tarih: 2025-08-09 17:15:00
+// Kod Grup Açıklaması: Dashboard bileşeninin, sahte veriler yerine IndexedDB'den gerçek verileri çekmesi için güncellenmesi.
 import React, { useState, useEffect } from 'react';
 import MessageModal from './MessageModal'; // Düzeltildi: 'MessageModal.js' dosyasının yolu güncellendi.
 import { getDenetimler } from '../services/IndexedDBService';
@@ -14,63 +14,23 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             setLoading(true);
-            let allDenetimler = [];
-
-            if (navigator.onLine) {
-                try {
-                    const response = {
-                        data: {
-                            data: [
-                                {
-                                    id: 1,
-                                    tarih: new Date().toISOString(),
-                                    formData: [{ durum: 'Uygun Değil' }],
-                                    kontrolListesi: [{ metin: "Kontrol 1", durum: "Uygun Değil", not: "Hata notu" }]
-                                },
-                                {
-                                    id: 2,
-                                    tarih: new Date().toISOString(),
-                                    formData: [{ durum: 'Uygun' }],
-                                    kontrolListesi: [{ metin: "Kontrol 2", durum: "Uygun" }]
-                                }
-                            ]
-                        }
-                    };
-                    if (response.data && Array.isArray(response.data.data)) {
-                        allDenetimler = response.data.data;
-                    } else {
-                        console.error('API’den gelen veri beklenildiği gibi değil:', response.data);
-                        throw new Error('API verisi beklenildiği gibi değil.');
-                    }
-                    console.log('Veriler sunucudan çekildi.');
-                } catch (apiError) {
-                    console.error('API’den veri çekilirken hata oluştu, IndexedDB’den çekiliyor:', apiError);
-                    try {
-                        allDenetimler = await getDenetimler();
-                        setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
-                    } catch (dbError) {
-                        setError('Hata: Veriler yerel depodan da alınamadı. Lütfen daha sonra tekrar deneyin.');
-                        console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
-                    }
+            try {
+                // Tarih: 2025-08-09 17:15:00
+                // Kod Grup Açıklaması: Sabit kodlanmış veriler yerine IndexedDB'den tüm denetimleri çekme.
+                const allDenetimler = await getDenetimler();
+                
+                if (Array.isArray(allDenetimler)) {
+                    setDenetimler(allDenetimler);
+                } else {
+                    setDenetimler([]);
                 }
-            } else {
-                try {
-                    allDenetimler = await getDenetimler();
-                    setModalMessage('İnternet bağlantısı yok. Veriler yerel depolamadan getirildi.');
-                } catch (dbError) {
-                    setError('Hata: Çevrimdışı modda veriler yerel depodan alınamadı. Lütfen daha sonra tekrar deneyin.');
-                    console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
-                }
+            } catch (dbError) {
+                setError('Hata: Veriler yerel depodan da alınamadı. Lütfen daha sonra tekrar deneyin.');
+                console.error('IndexedDB’den veri çekilirken hata oluştu:', dbError);
+            } finally {
+                setLoading(false);
+                if (modalMessage) setShowModal(true);
             }
-
-            if (Array.isArray(allDenetimler)) {
-                setDenetimler(allDenetimler);
-            } else {
-                setDenetimler([]);
-            }
-
-            setLoading(false);
-            if(modalMessage) setShowModal(true);
         };
 
         fetchDashboardData();
@@ -89,6 +49,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     if (error) return <div>Hata: {error}</div>;
 
     const hatalıDenetimler = denetimler.filter(d => d.formData && d.formData.some(m => m.durum === 'Uygun Değil'));
+
     return (
         <div className="dashboard-container">
             <h2>Genel Denetim Özeti</h2>
