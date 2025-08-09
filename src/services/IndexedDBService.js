@@ -1,40 +1,21 @@
-// src/services/IndexedDBService.js
-// Tarih: 09.08.2025 Saat: 14:20
-// Açıklama: Denetim verilerini IndexedDB kullanarak yerel olarak saklama ve çekme işlevlerini sağlar.
-
-import { openDB } from 'idb';
-
-const DB_NAME = 'kaliteKontrolDB';
-const DB_VERSION = 1;
-const STORE_NAME = 'denetimler';
-
-const initDB = async () => {
-    return openDB(DB_NAME, DB_VERSION, {
-        upgrade(db) {
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-            }
-        },
-    });
-};
-
-export const saveDenetim = async (denetim) => {
-    const db = await initDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    await tx.store.add(denetim);
-    await tx.done;
-    console.log('Denetim IndexedDB\'ye kaydedildi.');
-};
-
+// Tarih: 2025-08-08
+// Kod Grup Açıklaması: IndexedDB Servisi (Mock)
+// 'IndexedDBService' için mock implementasyon
+// Ayrı bir dosya gibi davranması için burada tanımlanmıştır.
 export const getDenetimler = async () => {
-    const db = await initDB();
-    return db.getAll(STORE_NAME);
-};
-
-export const clearDenetimler = async () => {
-    const db = await initDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    await tx.store.clear();
-    await tx.done;
-    console.log('IndexedDB temizlendi.');
+  console.log("IndexedDB'den denetimler alınıyor (Mock)...");
+  return [
+    {
+      id: 1,
+      tarih: new Date().toISOString(),
+      formData: [{ durum: 'Uygun Değil' }],
+      kontrolListesi: [{ metin: "Kontrol 1", durum: "Uygun Değil", not: "Hata notu" }]
+    },
+    {
+      id: 2,
+      tarih: new Date().toISOString(),
+      formData: [{ durum: 'Uygun' }],
+      kontrolListesi: [{ metin: "Kontrol 2", durum: "Uygun" }]
+    }
+  ];
 };

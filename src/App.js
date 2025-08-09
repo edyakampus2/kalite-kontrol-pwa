@@ -1,7 +1,5 @@
-// src/App.js
-// Tarih: 09.08.2025 Saat: 14:45
-// Açıklama: Uygulamanın ana bileşeni, merkezi veri ve görünüm yöneticisi.
-// Bu versiyon hem veri akışını hem de diğer bileşenlerin özelliklerini doğru şekilde birleştirir.
+// Tarih: 2025-08-08
+// Kod Grup Açıklaması: Ana Uygulama Yapısı
 import React, { useState } from 'react';
 import Menu from './components/Menu';
 import DenetimFormu from './components/DenetimFormu';
@@ -9,68 +7,32 @@ import DenetimListesi from './components/DenetimListesi';
 import DenetimDetayi from './components/DenetimDetayi';
 import Dashboard from './components/Dashboard';
 
-// Başlangıç için mock veriler
-const denetimlerMock = [
-    {
-        id: 1,
-        tarih: '01.08.2025',
-        maddeler: [
-            { id: 1, baslik: 'Üretim bandı temizliği', secim: 'Uygun' },
-            { id: 2, baslik: 'Son ürün kalite kontrolü', secim: 'Uygun Değil', not: 'Kutu hasarlı.' },
-            { id: 3, baslik: 'Çalışan ekipmanların durumu', secim: 'Uygun' },
-            { id: 4, baslik: 'İş sağlığı ve güvenliği kuralları', secim: 'Uygun' },
-        ],
-    },
-    {
-        id: 2,
-        tarih: '05.08.2025',
-        maddeler: [
-            { id: 1, baslik: 'Üretim bandı temizliği', secim: 'Uygun' },
-            { id: 2, baslik: 'Son ürün kalite kontrolü', secim: 'Uygun' },
-            { id: 3, baslik: 'Çalışan ekipmanların durumu', secim: 'Uygun Değil', not: 'Makinede yağ sızıntısı var.' },
-            { id: 4, baslik: 'İş sağlığı ve güvenliği kuralları', secim: 'Uygun' },
-        ],
-    },
-];
-
-const App = () => {
-    // Mevcut görünümü yöneten state
+export default function App() {
     const [currentView, setCurrentView] = useState('menu');
-    // Seçili denetimi yöneten state
     const [selectedDenetim, setSelectedDenetim] = useState(null);
-    // Tüm denetim verilerini yöneten state
-    const [denetimler, setDenetimler] = useState(denetimlerMock);
-
-    // Yeni bir denetim ekleme fonksiyonu
-    const addDenetim = (yeniDenetim) => {
-        setDenetimler(prevDenetimler => [...prevDenetimler, yeniDenetim]);
-    };
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const renderView = () => {
         switch (currentView) {
             case 'menu':
                 return <Menu setCurrentView={setCurrentView} />;
             case 'denetimFormu':
-                // addDenetim prop'u DenetimFormu'na gönderilir
-                return <DenetimFormu setCurrentView={setCurrentView} addDenetim={addDenetim} />;
+                return <DenetimFormu setCurrentView={setCurrentView} />;
             case 'denetimListesi':
-                // denetimler prop'u DenetimListesi'ne gönderilir
-                return <DenetimListesi setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} denetimler={denetimler} />;
-            case 'denetimDetayi':
-                return <DenetimDetayi setCurrentView={setCurrentView} denetim={selectedDenetim} />;
+                return <DenetimListesi setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} />;
             case 'dashboard':
-                // denetimler prop'u Dashboard'a gönderilir
-                return <Dashboard setCurrentView={setCurrentView} denetimler={denetimler} />;
+                return <Dashboard setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} refreshTrigger={refreshTrigger} />;
+            case 'denetimDetayi':
+                return <DenetimDetayi setCurrentView={setCurrentView} selectedDenetim={selectedDenetim} />;
             default:
                 return <Menu setCurrentView={setCurrentView} />;
         }
     };
 
     return (
-        <div className="bg-gray-100 min-h-screen">
+        <div className="min-h-screen bg-gray-100 p-4 font-inter">
+            <script src="https://cdn.tailwindcss.com"></script>
             {renderView()}
         </div>
     );
-};
-
-export default App;
+}

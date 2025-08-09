@@ -1,72 +1,84 @@
-// src/components/DenetimDetayi.js
-// Tarih: 09.08.2025 Saat: 14:20
-// Açıklama: Seçilen bir denetimin tüm detaylarını gösteren bileşen.
-
+// Tarih: 2025-08-08
+// Kod Grup Açıklaması: Denetim Detayı Bileşeni
 import React from 'react';
 
-const DenetimDetayi = ({ setCurrentView, denetim }) => {
-    if (!denetim) {
+const DenetimDetayi = ({ setCurrentView, selectedDenetim }) => {
+    if (!selectedDenetim) {
         return (
-            <div className="denetim-detayi p-6 bg-gray-100 rounded-xl shadow-inner text-center">
-                <p className="text-xl font-semibold text-gray-700">Denetim bulunamadı.</p>
-                <button
-                    onClick={() => setCurrentView('denetimListesi')}
-                    className="mt-6 w-full py-3 px-6 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out"
+            <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 rounded-lg shadow-md">
+                <p className="text-xl text-gray-700 mb-4">Denetim detayları yüklenemiyor...</p>
+                <button 
+                    onClick={() => setCurrentView('dashboard')}
+                    className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
                 >
-                    Listeye Dön
+                    Dashboard'a Geri Dön
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="denetim-detayi p-6 bg-gray-100 rounded-xl shadow-inner">
-            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Denetim Detayı</h2>
-            <div className="space-y-4">
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <p className="text-sm text-gray-500">Tarih:</p>
-                    <p className="font-semibold text-gray-700">
-                        {new Date(denetim.tarih).toLocaleString('tr-TR')}
-                    </p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <p className="text-sm text-gray-500">Konum:</p>
-                    <p className="font-semibold text-gray-700">
-                        {denetim.konum ? `Enlem: ${denetim.konum.latitude.toFixed(4)}, Boylam: ${denetim.konum.longitude.toFixed(4)}` : 'Konum bilgisi yok'}
-                    </p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <p className="text-sm text-gray-500 mb-2">Kontrol Listesi:</p>
-                    <ul className="space-y-2">
-                        {denetim.kontrolListesi.map((madde, index) => (
-                            <li key={index} className="border-b last:border-b-0 pb-2">
-                                <p className="font-medium text-gray-700">{madde.madde}: <span className={`font-bold ${madde.durum === 'Uygun' ? 'text-green-600' : 'text-red-600'}`}>{madde.durum}</span></p>
-                                {madde.durum === 'Uygun Değil' && (
-                                    <div className="ml-4 mt-2 space-y-2">
-                                        {madde.not && <p className="text-sm text-gray-600 italic">Not: {madde.not}</p>}
-                                        {madde.foto && (
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-sm text-gray-600">Fotoğraf:</span>
-                                                <img
-                                                    src={`data:image/jpeg;base64,${madde.foto}`}
-                                                    alt="Kanıt"
-                                                    className="w-32 h-32 object-cover rounded-md shadow-inner"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+        <div className="denetim-detayi p-4 sm:p-6 bg-gray-100 min-h-screen rounded-lg shadow-md">
+            <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Denetim Detayı</h2>
+
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-inner mb-6">
+                <p className="text-lg font-semibold text-gray-700 mb-2">
+                    <span className="font-bold text-gray-900">Tarih:</span> {selectedDenetim.tarih ? new Date(selectedDenetim.tarih).toLocaleString() : 'Tarih bilgisi yok'}
+                </p>
+                <p className="text-lg font-semibold text-gray-700">
+                    <span className="font-bold text-gray-900">Konum:</span> {selectedDenetim.konum ? `Lat: ${selectedDenetim.konum.latitude?.toFixed(4)}, Lon: ${selectedDenetim.konum.longitude?.toFixed(4)}` : 'Konum bilgisi yok'}
+                </p>
             </div>
-            <button
-                onClick={() => setCurrentView('denetimListesi')}
-                className="mt-6 w-full py-3 px-6 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-300 ease-in-out"
-            >
-                Listeye Dön
-            </button>
+
+            <h3 className="text-xl font-bold mt-8 mb-4 text-gray-800">Kontrol Maddeleri</h3>
+            
+            {selectedDenetim.kontrolListesi && selectedDenetim.kontrolListesi.length > 0 ? (
+                <ul className="space-y-4">
+                    {selectedDenetim.kontrolListesi.map((madde, index) => (
+                        <li key={index} className="bg-white p-4 rounded-lg shadow-md">
+                            <h4 className="text-lg font-bold text-gray-800 mb-2">{madde.metin}</h4>
+                            <p className="text-gray-600 mb-1">
+                                <span className="font-bold">Durum:</span> 
+                                <span className={`font-semibold ml-2 ${madde.durum === 'Uygun' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {madde.durum}
+                                </span>
+                            </p>
+                            {madde.not && <p className="text-gray-600 mb-1"><span className="font-bold">Not:</span> {madde.not}</p>}
+                            {madde.foto && (
+                                <div className="mt-4">
+                                    <p className="text-gray-600 font-bold mb-2">Kanıt Fotoğrafı:</p>
+                                    <img 
+                                        src={madde.foto} 
+                                        alt="Kanıt Fotoğrafı" 
+                                        className="w-full max-w-sm h-auto rounded-lg shadow-md border border-gray-300"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src="https://placehold.co/400x300/a3a3a3/ffffff?text=Resim+Bulunamadı";
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-center text-gray-500 p-4 bg-white rounded-lg shadow-md">Bu denetim için kontrol maddesi bulunmuyor.</p>
+            )}
+
+            <div className="mt-8 flex justify-center space-x-4">
+                <button 
+                    onClick={() => setCurrentView('denetimListesi')}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
+                >
+                    Denetim Listesine Dön
+                </button>
+                <button 
+                    onClick={() => setCurrentView('dashboard')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300"
+                >
+                    Dashboard'a Dön
+                </button>
+            </div>
         </div>
     );
 };

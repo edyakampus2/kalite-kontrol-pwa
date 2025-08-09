@@ -1,24 +1,15 @@
-// src/components/MessageModal.js
-// Tarih: 09.08.2025 Saat: 14:25
-// Açıklama: Uygulama genelinde kullanılacak, özelleştirilebilir bir mesaj modalı bileşeni.
-// isOpen: Modal'ın görünürlüğünü kontrol eder.
-// message: Modal içinde gösterilecek metin.
-// onClose: Modal'ı kapatmak için çağrılacak fonksiyon.
-
+// Tarih: 2025-08-08
+// Kod Grup Açıklaması: Mesaj Kutusu Modalı
 import React from 'react';
 
-const MessageModal = ({ isOpen, message, onClose }) => {
-    if (!isOpen) {
-        return null;
-    }
-
+const MessageModal = ({ message, onClose }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center transform transition-transform duration-300 ease-in-out scale-100">
-                <p className="text-xl font-semibold text-gray-700 mb-6">{message}</p>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+                <p className="text-gray-800 text-lg mb-4">{message}</p>
                 <button
                     onClick={onClose}
-                    className="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
                 >
                     Tamam
                 </button>
