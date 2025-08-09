@@ -1,26 +1,23 @@
 // src/components/DenetimFormu.js
-// Tarih: 09.08.2025 Saat: 13:45 (Geliştirilmiş)
+// Tarih: 09.08.2025 Saat: 14:10
+// Açıklama: Artık modal durumunu kendi içinde yönetmiyor. App.js'ten gelen `handleShowModal` ve `handleCloseModal` fonksiyonlarını kullanıyor.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveDenetim } from '../services/IndexedDBService';
 import { getFormMaddeleri } from '../data/FormVerileri';
-import MessageModal from './MessageModal';
 
-const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
+// Component, App.js'ten modal fonksiyonlarını prop olarak alıyor
+const DenetimFormu = ({ setCurrentView, handleShowModal, handleCloseModal }) => {
     // Form verilerini ve durumunu yöneten state'ler
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
 
     useEffect(() => {
-        // Form maddelerini yükle
         const maddeler = getFormMaddeleri();
         setFormData(maddeler);
 
-        // Kullanıcının konumunu al
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -36,7 +33,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
         }
     }, []);
 
-    // Form maddesi durumunu güncelleyen fonksiyon
     const handleDurumChange = (maddeId, durum) => {
         setFormData(prevData =>
             prevData.map(madde =>
@@ -45,7 +41,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
         );
     };
 
-    // Not alanını güncelleyen fonksiyon
     const handleNotChange = (maddeId, not) => {
         setFormData(prevData =>
             prevData.map(madde =>
@@ -54,7 +49,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
         );
     };
 
-    // Fotoğrafı güncelleyen fonksiyon (Base64 olarak kaydeder)
     const handleFotoChange = (maddeId, file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -69,7 +63,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
         }
     };
 
-    // Formu gönderen ve kaydeden fonksiyon
     const handleSubmit = async () => {
         setLoading(true);
         const denetim = {
@@ -77,40 +70,28 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
             konum,
             kontrolListesi: formData.map(({ foto, ...rest }) => ({
                 ...rest,
-                // Fotoğraf verisi varsa Base64 kısmını al
                 foto: foto ? foto.split(',')[1] : null,
             })),
         };
 
         try {
-            // Önce sunucuya kaydetmeyi dene
             await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
-            setModalMessage('Denetim başarıyla sunucuya kaydedildi!');
+            // Modal'ı göstermek için App.js'ten gelen fonksiyonu çağırıyoruz
+            handleShowModal('Denetim başarıyla sunucuya kaydedildi!');
         } catch (error) {
             console.error("Denetim sunucuya kaydedilirken hata oluştu, IndexedDB'ye kaydediliyor:", error);
             try {
-                // Sunucuya kaydedemezse, IndexedDB'ye kaydet
                 await saveDenetim(denetim);
-                setModalMessage('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
+                // Modal'ı göstermek için App.js'ten gelen fonksiyonu çağırıyoruz
+                handleShowModal('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
             } catch (indexedDBError) {
                 console.error("Denetim IndexedDB'ye kaydedilirken hata oluştu:", indexedDBError);
-                setModalMessage('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+                handleShowModal('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
             }
         } finally {
             setLoading(false);
-            // Modal'ın görünürlüğünü ayarla
-            setShowModal(true);
-            // setRefreshTrigger'ı buradan kaldırdık, modal kapatıldığında çağırılacak.
+            // Not: Modal kapandığında ana menüye dönme işlevi artık handleCloseModal fonksiyonu içinde yönetiliyor.
         }
-    };
-    
-    // Modal'ı kapatan fonksiyon
-    const closeModal = () => {
-        setShowModal(false);
-        // Modal kapatıldığında hem ana menüye dön hem de listeyi yenile
-        setCurrentView('menu');
-        // setRefreshTrigger'ı buraya taşıdık ki, liste yenileme işlemi modal kapandıktan sonra olsun.
-        setRefreshTrigger(prev => !prev);
     };
 
     return (
@@ -215,9 +196,6 @@ const DenetimFormu = ({ setCurrentView, setRefreshTrigger }) => {
                     Ana Menüye Dön
                 </button>
             </div>
-
-            {/* Modal'ın görünürlüğünü 'show' prop'u ile doğru bir şekilde iletiyoruz */}
-            {showModal && <MessageModal show={showModal} message={modalMessage} onClose={closeModal} />}
         </div>
     );
 };
