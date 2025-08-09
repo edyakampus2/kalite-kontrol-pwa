@@ -1,5 +1,6 @@
+// Tarih: 2025-08-09 Saat: 17:50
+// Kod Grup Açıklaması: Menu bileşeninden kullanılmayan MessageModal importunun kaldırılması.
 import React from 'react';
-import MessageModal from './MessageModal';
 
 const Menu = ({ setCurrentView }) => {
     return (
