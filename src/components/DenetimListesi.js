@@ -1,7 +1,7 @@
 // src/components/DenetimListesi.js
-// Tarih: 09.08.2025 Saat: 14:40
+// Tarih: 09.08.2025 Saat: 14:45
 // Açıklama: Tüm denetimleri listeleyen bileşen.
-// Yenilikler: Denetim verilerini App.js'den prop olarak alır.
+// Bu versiyon verileri App.js'den prop olarak alır.
 import React from 'react';
 
 const DenetimListesi = ({ setCurrentView, setSelectedDenetim, denetimler }) => {

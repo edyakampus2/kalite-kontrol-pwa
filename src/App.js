@@ -1,7 +1,7 @@
 // src/App.js
-// Tarih: 09.08.2025 Saat: 14:40
-// Açıklama: Uygulamanın ana bileşeni ve durum yöneticisi.
-// Yenilikler: Denetim verileri artık App.js'de merkezi olarak yönetiliyor ve alt bileşenlere prop olarak iletiliyor.
+// Tarih: 09.08.2025 Saat: 14:45
+// Açıklama: Uygulamanın ana bileşeni, merkezi veri ve görünüm yöneticisi.
+// Bu versiyon hem veri akışını hem de diğer bileşenlerin özelliklerini doğru şekilde birleştirir.
 import React, { useState } from 'react';
 import Menu from './components/Menu';
 import DenetimFormu from './components/DenetimFormu';
@@ -9,7 +9,7 @@ import DenetimListesi from './components/DenetimListesi';
 import DenetimDetayi from './components/DenetimDetayi';
 import Dashboard from './components/Dashboard';
 
-// Mock veriler başlangıçta yüklenebilir
+// Başlangıç için mock veriler
 const denetimlerMock = [
     {
         id: 1,
@@ -51,12 +51,15 @@ const App = () => {
             case 'menu':
                 return <Menu setCurrentView={setCurrentView} />;
             case 'denetimFormu':
+                // addDenetim prop'u DenetimFormu'na gönderilir
                 return <DenetimFormu setCurrentView={setCurrentView} addDenetim={addDenetim} />;
             case 'denetimListesi':
+                // denetimler prop'u DenetimListesi'ne gönderilir
                 return <DenetimListesi setCurrentView={setCurrentView} setSelectedDenetim={setSelectedDenetim} denetimler={denetimler} />;
             case 'denetimDetayi':
                 return <DenetimDetayi setCurrentView={setCurrentView} denetim={selectedDenetim} />;
             case 'dashboard':
+                // denetimler prop'u Dashboard'a gönderilir
                 return <Dashboard setCurrentView={setCurrentView} denetimler={denetimler} />;
             default:
                 return <Menu setCurrentView={setCurrentView} />;

@@ -1,7 +1,7 @@
 // src/components/Dashboard.js
-// Tarih: 09.08.2025 Saat: 14:40
+// Tarih: 09.08.2025 Saat: 14:45
 // Açıklama: Denetim istatistiklerini gösteren bileşen.
-// Yenilikler: Denetim verilerini App.js'den prop olarak alır.
+// Bu versiyon verileri App.js'den prop olarak alır ve doğru istatistikleri hesaplar.
 import React from 'react';
 
 const Dashboard = ({ setCurrentView, denetimler }) => {
@@ -25,7 +25,7 @@ const Dashboard = ({ setCurrentView, denetimler }) => {
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 <div className="bg-blue-100 p-6 rounded-lg shadow-md">
                     <p className="text-lg font-semibold text-blue-800">Toplam Denetim Sayısı</p>

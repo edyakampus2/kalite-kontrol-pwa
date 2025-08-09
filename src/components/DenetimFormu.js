@@ -1,7 +1,7 @@
 // src/components/DenetimFormu.js
-// Tarih: 09.08.2025 Saat: 14:35
+// Tarih: 09.08.2025 Saat: 14:45
 // Açıklama: Yeni bir denetim formu oluşturma bileşeni.
-// Yenilikler: Eksik bırakılan maddelerin başlıkları kırmızı renkte gösterilir.
+// Bu versiyon eksik maddeleri kırmızı renkte gösterir ve denetimi App.js'e gönderir.
 import React, { useState } from 'react';
 
 // Denetim maddelerini tutan sahte veri
@@ -87,7 +87,7 @@ const DenetimFormu = ({ setCurrentView, addDenetim }) => {
                             />
                             <span className="ml-2 text-green-600">Uygun</span>
                         </label>
-                        
+
                         {/* Uygun Değil seçeneği */}
                         <label className="flex items-center cursor-pointer">
                             <input
