@@ -1,7 +1,7 @@
 // Tarih: 2025-08-09 17:15:00
-// Kod Grup Açıklaması: Dashboard bileşeninin, sahte veriler yerine IndexedDB'den gerçek verileri çekmesi için güncellenmesi.
+// Kod Grup Açıklaması: Dashboard bileşenindeki kullanılmayan setModalMessage değişkeninin kaldırılması.
 import React, { useState, useEffect } from 'react';
-import MessageModal from './MessageModal'; // Düzeltildi: 'MessageModal.js' dosyasının yolu güncellendi.
+import MessageModal from './MessageModal';
 import { getDenetimler } from '../services/IndexedDBService';
 
 const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
@@ -9,7 +9,7 @@ const Dashboard = ({ setCurrentView, setSelectedDenetim, refreshTrigger }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
+    const [modalMessage] = useState(''); // Düzeltildi: 'setModalMessage' kaldırıldı
 
     useEffect(() => {
         const fetchDashboardData = async () => {
