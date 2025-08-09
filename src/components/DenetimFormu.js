@@ -1,14 +1,14 @@
-// src/components/DenetimFormu.js
-// Tarih: 08.08.2025 Saat: 14:55
+// Tarih: 09.08.2025 Saat: 10:45
 // Açıklama: Yeni denetim formu oluşturma, kullanıcıdan konum ve fotoğraf alma ve kaydetme işlemlerini yönetir.
 // Veriler, önce API'ye, başarısız olursa IndexedDB'ye kaydedilir.
+// Hata düzeltmeleri: App.js'den gelen prop'lar ile uyumsuzluk giderildi. Artık setModalMessage, setShowModal ve setRefreshTrigger prop'ları kullanılıyor.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveDenetim } from '../services/IndexedDBService';
 import { getFormMaddeleri } from '../data/FormVerileri';
 
-const DenetimFormu = ({ setCurrentView, showMessage, refreshList }) => {
+const DenetimFormu = ({ setCurrentView, setModalMessage, setShowModal, setRefreshTrigger }) => {
     const [formData, setFormData] = useState([]);
     const [konum, setKonum] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -29,13 +29,15 @@ const DenetimFormu = ({ setCurrentView, showMessage, refreshList }) => {
                 },
                 (error) => {
                     console.error("Konum bilgisi alınamadı:", error);
-                    showMessage('Konum bilgisi alınamadı. Denetim kaydında konum bilgisi olmayacaktır.');
+                    setModalMessage('Konum bilgisi alınamadı. Denetim kaydında konum bilgisi olmayacaktır.');
+                    setShowModal(true);
                 }
             );
         } else {
-            showMessage('Tarayıcınız konum servislerini desteklemiyor.');
+            setModalMessage('Tarayıcınız konum servislerini desteklemiyor.');
+            setShowModal(true);
         }
-    }, [showMessage]);
+    }, [setModalMessage, setShowModal]);
 
     const handleDurumChange = (maddeId, durum) => {
         setFormData(prevData =>
@@ -72,7 +74,8 @@ const DenetimFormu = ({ setCurrentView, showMessage, refreshList }) => {
         // Formda en az bir denetim maddesinin durumunun seçildiğinden emin ol
         const isFormValid = formData.every(madde => madde.durum !== null);
         if (!isFormValid) {
-            showMessage('Lütfen tüm kontrol maddelerinin durumunu belirleyin.');
+            setModalMessage('Lütfen tüm kontrol maddelerinin durumunu belirleyin.');
+            setShowModal(true);
             setLoading(false);
             return;
         }
@@ -91,21 +94,24 @@ const DenetimFormu = ({ setCurrentView, showMessage, refreshList }) => {
         try {
             // Önce sunucuya kaydetmeyi dene
             await axios.post('https://kalite-kontrol-api.onrender.com/api/denetimler', denetim);
-            showMessage('Denetim başarıyla sunucuya kaydedildi!');
+            setModalMessage('Denetim başarıyla sunucuya kaydedildi!');
+            setShowModal(true);
         } catch (error) {
             console.error("Denetim sunucuya kaydedilirken hata oluştu, IndexedDB'ye kaydediliyor:", error);
             try {
                 // Sunucuya kaydedemezse, IndexedDB'ye kaydet
                 await saveDenetim(denetim);
-                showMessage('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
+                setModalMessage('İnternet bağlantısı yok. Denetim yerel depolama alanına kaydedildi.');
+                setShowModal(true);
             } catch (indexedDBError) {
                 console.error("Denetim IndexedDB'ye kaydedilirken hata oluştu:", indexedDBError);
-                showMessage('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+                setModalMessage('Veri kaydı sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+                setShowModal(true);
             }
         } finally {
             setLoading(false);
             // Kaydetme işlemi bittiğinde listeyi yenile ve menüye dön
-            refreshList();
+            setRefreshTrigger(prev => !prev);
             setCurrentView('menu');
         }
     };
