@@ -1,6 +1,7 @@
 // src/components/DenetimFormu.js
-// Tarih: 09.08.2025 Saat: 14:10
-// Açıklama: Artık modal durumunu kendi içinde yönetmiyor. App.js'ten gelen `handleShowModal` ve `handleCloseModal` fonksiyonlarını kullanıyor.
+// Tarih: 09.08.2025 Saat: 14:15
+// Açıklama: Denetim kayıt işlemini yöneten form bileşeni.
+// Kayıt işlemi sonucundaki mesaj modalını gösterme ve kapatma işlevlerini App.js'ten props olarak alır.
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
